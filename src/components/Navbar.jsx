@@ -71,20 +71,20 @@ export default function Navbar({
           style={{ 
             display: 'flex', 
             whiteSpace: 'nowrap',
-            animation: 'marquee 25s linear infinite',
+            animation: 'marquee 18s linear infinite',
             width: 'max-content'
           }}
         >
-          <span style={{ paddingRight: '4rem' }}>⚡ FLASH SALE: USE CODE <strong style={{ color: 'var(--gold-light)' }}>JESAMVIP</strong> FOR 15% OFF ORDERS OVER ₦100k! ⚡</span>
-          <span style={{ paddingRight: '4rem' }}>💝 JOIN THE VIP CLUB FOR 100 BONUS LOYALTY POINTS INSTANTLY! 💝</span>
-          <span style={{ paddingRight: '4rem' }}>🚚 FREE SHIPPING IN LAGOS ON ALL WIG ORDERS ABOVE ₦150k! 🚚</span>
-          <span style={{ paddingRight: '4rem' }}>✨ VISIT OUR AI WIG TRY-ON TO VIRTUALLY STYLE YOUR HAIR RIGHT NOW! ✨</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
           
           {/* Duplicate contents for seamless looping */}
-          <span style={{ paddingRight: '4rem' }}>⚡ FLASH SALE: USE CODE <strong style={{ color: 'var(--gold-light)' }}>JESAMVIP</strong> FOR 15% OFF ORDERS OVER ₦100k! ⚡</span>
-          <span style={{ paddingRight: '4rem' }}>💝 JOIN THE VIP CLUB FOR 100 BONUS LOYALTY POINTS INSTANTLY! 💝</span>
-          <span style={{ paddingRight: '4rem' }}>🚚 FREE SHIPPING IN LAGOS ON ALL WIG ORDERS ABOVE ₦150k! 🚚</span>
-          <span style={{ paddingRight: '4rem' }}>✨ VISIT OUR AI WIG TRY-ON TO VIRTUALLY STYLE YOUR HAIR RIGHT NOW! ✨</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
         </div>
       </div>
 
