@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { mockBookings, mockUsers } from '../utils/mockDb.js';
 
+const router = express.Router();
 const JESAM_EMAIL = process.env.JESAM_CONTACT_EMAIL || 'beautybyjessam@gmail.com';
 
 // GET /api/bookings/reserved?date=YYYY-MM-DD - Get reserved time slots for date

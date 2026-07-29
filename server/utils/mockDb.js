@@ -286,4 +286,5 @@ export const mockServices = [
 ];
 
 export const mockBookings = [];
+export const mockOrders = [];
 export const mockUsers = [];
