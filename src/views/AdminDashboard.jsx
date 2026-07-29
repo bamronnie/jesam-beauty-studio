@@ -134,6 +134,8 @@ export default function AdminDashboard({
   const [editProdVideo, setEditProdVideo] = useState('');
   const [editProdDesc, setEditProdDesc] = useState('');
   const [editUploadedImages, setEditUploadedImages] = useState([]);
+  const [editGalleryList, setEditGalleryList] = useState([]);
+  const [newUrlInput, setNewUrlInput] = useState('');
   const [productEntryMode, setProductEntryMode] = useState('single'); // 'single' or 'bulk'
   const [csvInput, setCsvInput] = useState('name,price,oldPrice,category,tag,img,desc\n"24\\" HD Closure Custom Wig",195000,220000,"wigs","Hot Deal","https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=500","Customized wig unit"\n"Styling Mousse",9500,12000,"care","Jesam Essential","https://images.unsplash.com/photo-1620331311520-246422fd82f9?q=80&w=500","Firm hold moisturizing mousse"');
   const [dragActive, setDragActive] = useState(false);
@@ -417,11 +419,87 @@ export default function AdminDashboard({
     setEditProdOldPrice(prod.oldPrice || '');
     setEditProdCategory(prod.category || 'wigs');
     setEditProdTag(prod.tag || '');
-    setEditProdImg(prod.img || '');
-    setEditProdImages(Array.isArray(prod.images) ? prod.images.join(', ') : '');
+    
+    const coverPhoto = prod.img || (prod.images && prod.images[0]) || '';
+    setEditProdImg(coverPhoto);
+    
+    const existingGallery = Array.isArray(prod.images) && prod.images.length > 0
+      ? [...prod.images]
+      : (coverPhoto ? [coverPhoto] : []);
+    
+    setEditGalleryList(existingGallery);
     setEditProdVideo(prod.video || '');
     setEditProdDesc(prod.desc || '');
-    setEditUploadedImages([]);
+    setNewUrlInput('');
+  };
+
+  // Remove individual photo from edit gallery
+  const handleRemoveEditImage = (indexToRemove) => {
+    const photoToRemove = editGalleryList[indexToRemove];
+    const updatedList = editGalleryList.filter((_, idx) => idx !== indexToRemove);
+    setEditGalleryList(updatedList);
+    if (editProdImg === photoToRemove) {
+      setEditProdImg(updatedList[0] || '');
+    }
+    showNotification('Image removed from gallery.', 'info');
+  };
+
+  // Set selected photo as main cover
+  const handleSetMainCover = (imgUrl) => {
+    setEditProdImg(imgUrl);
+    showNotification('Main cover photo set!', 'success');
+  };
+
+  // File upload for new photo angle(s)
+  const handleEditImageUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const base64 = evt.target.result;
+        setEditGalleryList(prev => {
+          if (!prev.includes(base64)) return [...prev, base64];
+          return prev;
+        });
+        setEditProdImg(currentCover => currentCover || base64);
+      };
+      reader.readAsDataURL(file);
+    });
+    showNotification(`${files.length} new image(s) added!`, 'success');
+  };
+
+  // File upload for new product video clip (.mp4, .mov)
+  const handleEditVideoUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        setEditProdVideo(evt.target.result);
+        showNotification('New product video uploaded!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Add web image URL
+  const handleAddWebImage = () => {
+    if (newUrlInput.trim()) {
+      const url = newUrlInput.trim();
+      if (!editGalleryList.includes(url)) {
+        setEditGalleryList(prev => [...prev, url]);
+        if (!editProdImg) setEditProdImg(url);
+        showNotification('Web image URL added to product gallery!', 'success');
+      }
+      setNewUrlInput('');
+    }
+  };
+
+  // Remove video link
+  const handleRemoveVideo = () => {
+    setEditProdVideo('');
+    showNotification('Product video clip removed.', 'info');
   };
 
   // Save Product Edits
@@ -431,22 +509,14 @@ export default function AdminDashboard({
     const prodId = editingProduct._id || editingProduct.id;
 
     try {
-      const coverUrl = editProdImg.trim() || editingProduct.img || '';
-      const imagesArray = [coverUrl];
-
-      editUploadedImages.forEach((imgBase64) => {
-        if (imgBase64 && !imagesArray.includes(imgBase64)) {
-          imagesArray.push(imgBase64);
-        }
-      });
-
-      if (editProdImages.trim()) {
-        editProdImages.split(',').forEach(url => {
-          const trimmed = url.trim();
-          if (trimmed && !imagesArray.includes(trimmed)) {
-            imagesArray.push(trimmed);
-          }
-        });
+      const finalCover = editProdImg || editGalleryList[0] || 'https://images.unsplash.com/photo-1620331311520-246422fd82f9?q=80&w=500';
+      
+      let finalGallery = [...editGalleryList];
+      if (finalCover && !finalGallery.includes(finalCover)) {
+        finalGallery.unshift(finalCover);
+      }
+      if (finalGallery.length === 0) {
+        finalGallery = [finalCover];
       }
 
       const payload = {
@@ -455,15 +525,15 @@ export default function AdminDashboard({
         oldPrice: Number(editProdOldPrice || 0),
         category: editProdCategory,
         tag: editProdTag || null,
-        img: coverUrl,
-        images: imagesArray,
+        img: finalCover,
+        images: finalGallery,
         video: editProdVideo.trim(),
         desc: editProdDesc
       };
 
       const updated = await api.updateProduct(prodId, payload);
       setProducts(products.map(p => ((p._id || p.id) === prodId ? updated : p)));
-      showNotification('Product details updated successfully!', 'success');
+      showNotification('Product details & media updated successfully!', 'success');
       setEditingProduct(null);
     } catch (err) {
       showNotification('Error updating product: ' + err.message, 'error');
@@ -2238,138 +2308,245 @@ export default function AdminDashboard({
                 Edit Product: {editingProduct.name}
               </h3>
 
-              {/* Visual Asset Previews Strip */}
+              {/* Interactive Product Media Manager */}
               <div 
                 style={{ 
-                  background: 'rgba(18, 1, 4, 0.6)', 
+                  background: 'rgba(18, 1, 4, 0.7)', 
                   border: '1px solid var(--border-light)', 
-                  borderRadius: '8px', 
-                  padding: '0.9rem', 
+                  borderRadius: '10px', 
+                  padding: '1.25rem', 
                   marginBottom: '1.25rem',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.5rem'
+                  gap: '1rem'
                 }}
               >
-                <span style={{ fontSize: '0.75rem', color: 'var(--gold-primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  🖼️ Attached Product Media & Angle Photos ({ (editingProduct.images?.length || 1) } photos + {editingProduct.video ? '1 video' : '0 videos'})
-                </span>
-                <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
-                  {/* Main Image */}
-                  <div style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '2px solid var(--gold-primary)', flexShrink: 0 }}>
-                    <img src={editProdImg || editingProduct.img} alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <span style={{ position: 'absolute', top: '2px', left: '2px', background: 'var(--gold-primary)', color: 'var(--burgundy-dark)', fontSize: '0.5rem', fontWeight: 'bold', padding: '1px 3px', borderRadius: '2px' }}>COVER</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--gold-primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Layers size={16} />
+                    Product Photos ({editGalleryList.length} total)
+                  </span>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <label 
+                      style={{ 
+                        background: 'rgba(212, 175, 55, 0.15)', 
+                        border: '1px solid var(--border-light)', 
+                        color: 'var(--gold-primary)', 
+                        padding: '0.35rem 0.75rem', 
+                        borderRadius: '4px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600, 
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.35rem'
+                      }}
+                    >
+                      <Upload size={13} />
+                      + Upload New Photos
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        multiple 
+                        onChange={handleEditImageUpload} 
+                        style={{ display: 'none' }} 
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Photos Grid */}
+                <div 
+                  style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', 
+                    gap: '0.75rem',
+                    maxHeight: '220px',
+                    overflowY: 'auto',
+                    paddingRight: '0.25rem'
+                  }}
+                >
+                  {editGalleryList.map((imgUrl, idx) => {
+                    const isCover = (editProdImg === imgUrl) || (!editProdImg && idx === 0);
+                    return (
+                      <div 
+                        key={idx} 
+                        style={{ 
+                          position: 'relative', 
+                          height: '110px', 
+                          borderRadius: '8px', 
+                          overflow: 'hidden', 
+                          border: isCover ? '2px solid var(--gold-primary)' : '1px solid var(--border-light)',
+                          background: '#000',
+                          boxShadow: isCover ? '0 0 10px rgba(212,175,55,0.4)' : 'none'
+                        }}
+                      >
+                        <img 
+                          src={imgUrl} 
+                          alt={`Photo ${idx + 1}`} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        />
+
+                        {/* Cover Badge or Make Cover Button */}
+                        {isCover ? (
+                          <span 
+                            style={{ 
+                              position: 'absolute', 
+                              top: '4px', 
+                              left: '4px', 
+                              background: 'var(--gold-primary)', 
+                              color: 'var(--burgundy-dark)', 
+                              fontSize: '0.55rem', 
+                              fontWeight: 'bold', 
+                              padding: '2px 5px', 
+                              borderRadius: '3px' 
+                            }}
+                          >
+                            MAIN COVER
+                          </span>
+                        ) : (
+                          <button 
+                            type="button"
+                            onClick={() => handleSetMainCover(imgUrl)}
+                            style={{
+                              position: 'absolute',
+                              top: '4px',
+                              left: '4px',
+                              background: 'rgba(0,0,0,0.75)',
+                              color: 'var(--gold-primary)',
+                              border: '1px solid var(--border-light)',
+                              fontSize: '0.55rem',
+                              padding: '2px 5px',
+                              borderRadius: '3px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Set Cover
+                          </button>
+                        )}
+
+                        {/* Delete Photo Button */}
+                        <button 
+                          type="button"
+                          onClick={() => handleRemoveEditImage(idx)}
+                          style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            background: 'rgba(220, 38, 38, 0.85)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '22px',
+                            height: '22px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s'
+                          }}
+                          title="Delete photo from gallery"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Add Image URL bar */}
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Or paste photo web URL..."
+                    value={newUrlInput}
+                    onChange={(e) => setNewUrlInput(e.target.value)}
+                    style={{ flex: 1, fontSize: '0.8rem' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddWebImage}
+                    className="btn btn-secondary"
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+                  >
+                    + Add URL
+                  </button>
+                </div>
+
+                {/* Product Video Section */}
+                <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '0.8rem', marginTop: '0.4rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--gold-primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      🎬 Product Video Reel
+                    </span>
+                    <label 
+                      style={{ 
+                        background: 'rgba(212, 175, 55, 0.15)', 
+                        border: '1px solid var(--border-light)', 
+                        color: 'var(--gold-primary)', 
+                        padding: '0.35rem 0.75rem', 
+                        borderRadius: '4px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600, 
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.35rem'
+                      }}
+                    >
+                      <Upload size={13} />
+                      {editProdVideo ? 'Replace Video' : 'Upload Video File'}
+                      <input 
+                        type="file" 
+                        accept="video/*" 
+                        onChange={handleEditVideoUpload} 
+                        style={{ display: 'none' }} 
+                      />
+                    </label>
                   </div>
 
-                  {/* Additional Gallery Screenshots */}
-                  {Array.isArray(editingProduct.images) && editingProduct.images.map((imgUrl, idx) => (
-                    imgUrl !== editProdImg && (
-                      <div key={idx} style={{ width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-light)', flexShrink: 0 }}>
-                        <img src={imgUrl} alt={`Angle ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {editProdVideo ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(0,0,0,0.5)', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-light)' }}>
+                      <video src={editProdVideo} style={{ width: '90px', height: '60px', borderRadius: '4px', objectFit: 'cover', background: '#000' }} muted controls />
+                      <div style={{ flex: 1, overflow: 'hidden' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--cream-primary)', fontWeight: 600 }}>Active Video Reel Attached</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-cream-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{editProdVideo.slice(0, 45)}...</div>
                       </div>
-                    )
-                  ))}
-
-                  {/* Video Clip */}
-                  {editingProduct.video && (
-                    <div style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-light)', background: '#000', flexShrink: 0 }}>
-                      <video src={editingProduct.video} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
-                      <span style={{ position: 'absolute', bottom: '2px', right: '2px', background: 'rgba(0,0,0,0.85)', color: 'var(--gold-primary)', fontSize: '0.5rem', fontWeight: 'bold', padding: '1px 3px', borderRadius: '2px' }}>VIDEO</span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveVideo}
+                        style={{
+                          background: 'rgba(220, 38, 38, 0.15)',
+                          border: '1px solid rgba(220, 38, 38, 0.3)',
+                          color: '#ef4444',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '4px',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                      >
+                        <Trash2 size={13} />
+                        Delete Video
+                      </button>
                     </div>
+                  ) : (
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Or paste video URL (e.g. /videos/jesam-p1.mp4 or https://...)"
+                      value={editProdVideo}
+                      onChange={(e) => setEditProdVideo(e.target.value)}
+                      style={{ fontSize: '0.8rem' }}
+                    />
                   )}
                 </div>
               </div>
 
               <form onSubmit={handleSaveProductEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Product Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={editProdName}
-                    onChange={(e) => setEditProdName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="grid-cols-2" style={{ gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Current Price (₦)</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={editProdPrice}
-                      onChange={(e) => setEditProdPrice(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Old / Strikethrough Price (₦)</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      placeholder="e.g. 220000"
-                      value={editProdOldPrice}
-                      onChange={(e) => setEditProdOldPrice(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid-cols-2" style={{ gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Category</label>
-                    <select
-                      className="form-control"
-                      value={editProdCategory}
-                      onChange={(e) => setEditProdCategory(e.target.value)}
-                    >
-                      <option value="wigs">Custom Wigs</option>
-                      <option value="extensions">Wefts & Bundles</option>
-                      <option value="care">Hair Care</option>
-                      <option value="tools">Styling Tools</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Promo Tag</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="e.g. Best Seller, Glueless"
-                      value={editProdTag}
-                      onChange={(e) => setEditProdTag(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Cover Image URL</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={editProdImg}
-                    onChange={(e) => setEditProdImg(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Product Video URL</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={editProdVideo}
-                    onChange={(e) => setEditProdVideo(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Gallery Image URLs (Comma-separated)</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={editProdImages}
-                    onChange={(e) => setEditProdImages(e.target.value)}
-                  />
-                </div>
 
                 <div className="form-group">
                   <label className="form-label">Product Description</label>
