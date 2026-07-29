@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ShoppingBag, Plus, Sparkles, Check, X, RefreshCw, Layers, Upload, AlertTriangle, FileText, CheckSquare, Trash2, Search, List, Grid, TrendingUp, Users, Shield, Award } from 'lucide-react';
+import { Calendar, ShoppingBag, Plus, Sparkles, Check, X, RefreshCw, Layers, Upload, AlertTriangle, FileText, CheckSquare, Trash2, Search, List, Grid, TrendingUp, Users, Shield, Award, Edit2 } from 'lucide-react';
 import api from '../services/api';
 
 export default function AdminDashboard({ 
@@ -122,7 +122,18 @@ export default function AdminDashboard({
   const [uploadedImages, setUploadedImages] = useState([]);
   const [newProdVideo, setNewProdVideo] = useState('');
 
-  // Bulk CSV Import States
+  // Product Editing States
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editProdName, setEditProdName] = useState('');
+  const [editProdPrice, setEditProdPrice] = useState('');
+  const [editProdOldPrice, setEditProdOldPrice] = useState('');
+  const [editProdCategory, setEditProdCategory] = useState('wigs');
+  const [editProdTag, setEditProdTag] = useState('');
+  const [editProdImg, setEditProdImg] = useState('');
+  const [editProdImages, setEditProdImages] = useState('');
+  const [editProdVideo, setEditProdVideo] = useState('');
+  const [editProdDesc, setEditProdDesc] = useState('');
+  const [editUploadedImages, setEditUploadedImages] = useState([]);
   const [productEntryMode, setProductEntryMode] = useState('single'); // 'single' or 'bulk'
   const [csvInput, setCsvInput] = useState('name,price,oldPrice,category,tag,img,desc\n"24\\" HD Closure Custom Wig",195000,220000,"wigs","Hot Deal","https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=500","Customized wig unit"\n"Styling Mousse",9500,12000,"care","Jesam Essential","https://images.unsplash.com/photo-1620331311520-246422fd82f9?q=80&w=500","Firm hold moisturizing mousse"');
   const [dragActive, setDragActive] = useState(false);
@@ -395,6 +406,67 @@ export default function AdminDashboard({
       setNewProdVideo('');
     } catch (err) {
       showNotification('Error adding product: ' + err.message, 'error');
+    }
+  };
+
+  // Open Product Edit Modal
+  const handleOpenEditProduct = (prod) => {
+    setEditingProduct(prod);
+    setEditProdName(prod.name || '');
+    setEditProdPrice(prod.price || '');
+    setEditProdOldPrice(prod.oldPrice || '');
+    setEditProdCategory(prod.category || 'wigs');
+    setEditProdTag(prod.tag || '');
+    setEditProdImg(prod.img || '');
+    setEditProdImages(Array.isArray(prod.images) ? prod.images.join(', ') : '');
+    setEditProdVideo(prod.video || '');
+    setEditProdDesc(prod.desc || '');
+    setEditUploadedImages([]);
+  };
+
+  // Save Product Edits
+  const handleSaveProductEdit = async (e) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    const prodId = editingProduct._id || editingProduct.id;
+
+    try {
+      const coverUrl = editProdImg.trim() || editingProduct.img || '';
+      const imagesArray = [coverUrl];
+
+      editUploadedImages.forEach((imgBase64) => {
+        if (imgBase64 && !imagesArray.includes(imgBase64)) {
+          imagesArray.push(imgBase64);
+        }
+      });
+
+      if (editProdImages.trim()) {
+        editProdImages.split(',').forEach(url => {
+          const trimmed = url.trim();
+          if (trimmed && !imagesArray.includes(trimmed)) {
+            imagesArray.push(trimmed);
+          }
+        });
+      }
+
+      const payload = {
+        name: editProdName,
+        price: Number(editProdPrice),
+        oldPrice: Number(editProdOldPrice || 0),
+        category: editProdCategory,
+        tag: editProdTag || null,
+        img: coverUrl,
+        images: imagesArray,
+        video: editProdVideo.trim(),
+        desc: editProdDesc
+      };
+
+      const updated = await api.updateProduct(prodId, payload);
+      setProducts(products.map(p => ((p._id || p.id) === prodId ? updated : p)));
+      showNotification('Product details updated successfully!', 'success');
+      setEditingProduct(null);
+    } catch (err) {
+      showNotification('Error updating product: ' + err.message, 'error');
     }
   };
 
@@ -1986,27 +2058,219 @@ export default function AdminDashboard({
                       </div>
                     </div>
                     
-                    <button 
-                      onClick={() => handleDeleteProduct(prod._id || prod.id)}
-                      style={{
-                        background: 'rgba(220, 38, 38, 0.1)',
-                        border: '1px solid rgba(220, 38, 38, 0.25)',
-                        color: '#ef4444',
-                        padding: '0.45rem',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.2s'
-                      }}
-                      title="Delete Product"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <button 
+                        onClick={() => handleOpenEditProduct(prod)}
+                        style={{
+                          background: 'rgba(212, 175, 55, 0.15)',
+                          border: '1px solid var(--border-light)',
+                          color: 'var(--gold-primary)',
+                          padding: '0.45rem 0.75rem',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 600
+                        }}
+                        title="Edit Product Details"
+                      >
+                        <Edit2 size={14} /> Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteProduct(prod._id || prod.id)}
+                        style={{
+                          background: 'rgba(220, 38, 38, 0.1)',
+                          border: '1px solid rgba(220, 38, 38, 0.25)',
+                          color: '#ef4444',
+                          padding: '0.45rem',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s'
+                        }}
+                        title="Delete Product"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* FULL EDIT PRODUCT MODAL OVERLAY */}
+        {editingProduct && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(12, 1, 3, 0.85)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1.5rem'
+            }}
+          >
+            <div 
+              style={{
+                background: 'var(--burgundy-dark)',
+                border: '1px solid var(--border-light)',
+                borderRadius: '12px',
+                width: '100%',
+                maxWidth: '650px',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                padding: '2rem',
+                boxShadow: 'var(--shadow-xl)',
+                position: 'relative'
+              }}
+              className="animate-scale-up"
+            >
+              <button 
+                onClick={() => setEditingProduct(null)}
+                style={{
+                  position: 'absolute',
+                  top: '1.25rem',
+                  right: '1.25rem',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--gold-primary)',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={24} />
+              </button>
+
+              <h3 style={{ fontSize: '1.35rem', fontFamily: 'var(--font-serif)', color: 'var(--cream-primary)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Edit2 size={20} style={{ color: 'var(--gold-primary)' }} />
+                Edit Product: {editingProduct.name}
+              </h3>
+
+              <form onSubmit={handleSaveProductEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Product Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editProdName}
+                    onChange={(e) => setEditProdName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="grid-cols-2" style={{ gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Current Price (₦)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={editProdPrice}
+                      onChange={(e) => setEditProdPrice(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Old / Strikethrough Price (₦)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="e.g. 220000"
+                      value={editProdOldPrice}
+                      onChange={(e) => setEditProdOldPrice(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid-cols-2" style={{ gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Category</label>
+                    <select
+                      className="form-control"
+                      value={editProdCategory}
+                      onChange={(e) => setEditProdCategory(e.target.value)}
+                    >
+                      <option value="wigs">Custom Wigs</option>
+                      <option value="extensions">Wefts & Bundles</option>
+                      <option value="care">Hair Care</option>
+                      <option value="tools">Styling Tools</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Promo Tag</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g. Best Seller, Glueless"
+                      value={editProdTag}
+                      onChange={(e) => setEditProdTag(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Cover Image URL</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editProdImg}
+                    onChange={(e) => setEditProdImg(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Product Video URL</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editProdVideo}
+                    onChange={(e) => setEditProdVideo(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Gallery Image URLs (Comma-separated)</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editProdImages}
+                    onChange={(e) => setEditProdImages(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Product Description</label>
+                  <textarea
+                    rows="4"
+                    className="form-control"
+                    value={editProdDesc}
+                    onChange={(e) => setEditProdDesc(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setEditingProduct(null)}
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    <Check size={16} /> Save Product Edits
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

@@ -263,6 +263,52 @@ router.post('/import', authenticateToken, isAdmin, async (req, res) => {
   });
 });
 
+// Update product (Admin only)
+router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
+  const { name, price, oldPrice, category, tag, img, images, video, poster, desc } = req.body;
+  
+  try {
+    if (!global.isDbConnected) {
+      const product = mockProducts.find(p => p._id === req.params.id || p.id === req.params.id);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      if (name !== undefined) product.name = name;
+      if (price !== undefined) product.price = Number(price);
+      if (oldPrice !== undefined) product.oldPrice = Number(oldPrice);
+      if (category !== undefined) product.category = category;
+      if (tag !== undefined) product.tag = tag;
+      if (img !== undefined) product.img = img;
+      if (images !== undefined) product.images = images;
+      if (video !== undefined) product.video = video;
+      if (poster !== undefined) product.poster = poster;
+      if (desc !== undefined) product.desc = desc;
+      return res.status(200).json(product);
+    }
+
+    const updateFields = {};
+    if (name !== undefined) updateFields.name = name;
+    if (price !== undefined) updateFields.price = Number(price);
+    if (oldPrice !== undefined) updateFields.oldPrice = Number(oldPrice);
+    if (category !== undefined) updateFields.category = category;
+    if (tag !== undefined) updateFields.tag = tag;
+    if (img !== undefined) updateFields.img = img;
+    if (images !== undefined) updateFields.images = images;
+    if (video !== undefined) updateFields.video = video;
+    if (poster !== undefined) updateFields.poster = poster;
+    if (desc !== undefined) updateFields.desc = desc;
+
+    const product = await Product.findByIdAndUpdate(req.params.id, updateFields, { new: true });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.status(200).json(product);
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ message: 'Error updating product: ' + error.message });
+  }
+});
+
 // Delete product (Admin only)
 router.delete('/:id', authenticateToken, isAdmin, async (req, res) => {
   try {

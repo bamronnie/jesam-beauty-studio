@@ -82,6 +82,10 @@ const api = {
     return this.request('/products', 'POST', productData);
   },
 
+  async updateProduct(id, productData) {
+    return this.request(`/products/${id}`, 'PUT', productData);
+  },
+
   async deleteProduct(id) {
     return this.request(`/products/${id}`, 'DELETE');
   },
