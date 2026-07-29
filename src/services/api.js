@@ -107,6 +107,10 @@ const api = {
     return this.request('/services', 'POST', serviceData);
   },
 
+  async updateService(id, serviceData) {
+    return this.request(`/services/${id}`, 'PUT', serviceData);
+  },
+
   async deleteService(id) {
     return this.request(`/services/${id}`, 'DELETE');
   },

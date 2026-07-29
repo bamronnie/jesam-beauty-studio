@@ -55,6 +55,41 @@ router.post('/', authenticateToken, isAdmin, async (req, res) => {
   }
 });
 
+// Update service (Admin only)
+router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
+  const { title, desc, duration, price, category } = req.body;
+  try {
+    if (!global.isDbConnected) {
+      const service = mockServices.find(s => s._id === req.params.id || s.id === req.params.id);
+      if (!service) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+      if (title !== undefined) service.title = title;
+      if (desc !== undefined) service.desc = desc;
+      if (duration !== undefined) service.duration = duration;
+      if (price !== undefined) service.price = Number(price);
+      if (category !== undefined) service.category = category;
+      return res.status(200).json(service);
+    }
+
+    const updateFields = {};
+    if (title !== undefined) updateFields.title = title;
+    if (desc !== undefined) updateFields.desc = desc;
+    if (duration !== undefined) updateFields.duration = duration;
+    if (price !== undefined) updateFields.price = Number(price);
+    if (category !== undefined) updateFields.category = category;
+
+    const service = await Service.findByIdAndUpdate(req.params.id, updateFields, { new: true });
+    if (!service) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+    res.status(200).json(service);
+  } catch (error) {
+    console.error('Error updating service:', error);
+    res.status(500).json({ message: 'Error updating service: ' + error.message });
+  }
+});
+
 // Delete service (Admin only)
 router.delete('/:id', authenticateToken, isAdmin, async (req, res) => {
   try {

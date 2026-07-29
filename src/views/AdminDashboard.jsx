@@ -470,6 +470,46 @@ export default function AdminDashboard({
     }
   };
 
+  // Service Editing States & Handlers
+  const [editingService, setEditingService] = useState(null);
+  const [editSrvTitle, setEditSrvTitle] = useState('');
+  const [editSrvPrice, setEditSrvPrice] = useState('');
+  const [editSrvDuration, setEditSrvDuration] = useState('120 mins');
+  const [editSrvCategory, setEditSrvCategory] = useState('wigs');
+  const [editSrvDesc, setEditSrvDesc] = useState('');
+
+  const handleOpenEditService = (srv) => {
+    setEditingService(srv);
+    setEditSrvTitle(srv.title || '');
+    setEditSrvPrice(srv.price || '');
+    setEditSrvDuration(srv.duration || '120 mins');
+    setEditSrvCategory(srv.category || 'wigs');
+    setEditSrvDesc(srv.desc || srv.description || '');
+  };
+
+  const handleSaveServiceEdit = async (e) => {
+    e.preventDefault();
+    if (!editingService) return;
+    const srvId = editingService._id || editingService.id;
+
+    try {
+      const payload = {
+        title: editSrvTitle,
+        price: Number(editSrvPrice),
+        duration: editSrvDuration,
+        category: editSrvCategory,
+        desc: editSrvDesc
+      };
+
+      const updated = await api.updateService(srvId, payload);
+      setServices(services.map(s => ((s._id || s.id) === srvId ? updated : s)));
+      showNotification('Service styling details updated successfully!', 'success');
+      setEditingService(null);
+    } catch (err) {
+      showNotification('Error updating service styling: ' + err.message, 'error');
+    }
+  };
+
   // Service Addition handler
   const handleAddService = async (e) => {
     e.preventDefault();
@@ -2050,11 +2090,52 @@ export default function AdminDashboard({
                       border: '1px solid var(--border-light)'
                     }}
                   >
-                    <div>
-                      <h4 style={{ color: 'var(--cream-primary)', fontSize: '0.95rem', fontWeight: 600 }}>{prod.name}</h4>
-                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: 'var(--text-cream-muted)', marginTop: '0.2rem' }}>
-                        <span>Category: <strong>{prod.category}</strong></span>
-                        <span>Price: <strong style={{ color: 'var(--gold-primary)' }}>₦{prod.price.toLocaleString()}</strong></span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                      {/* Visual Product Image Thumbnail */}
+                      <div 
+                        style={{ 
+                          position: 'relative', 
+                          width: '54px', 
+                          height: '54px', 
+                          borderRadius: '6px', 
+                          overflow: 'hidden', 
+                          border: '1px solid var(--border-light)', 
+                          background: '#000', 
+                          flexShrink: 0 
+                        }}
+                      >
+                        <img 
+                          src={prod.img || (prod.images && prod.images[0]) || 'https://images.unsplash.com/photo-1620331311520-246422fd82f9?q=80&w=150'} 
+                          alt={prod.name} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        />
+                        {prod.video && (
+                          <span 
+                            style={{ 
+                              position: 'absolute', 
+                              bottom: '2px', 
+                              right: '2px', 
+                              background: 'rgba(0,0,0,0.8)', 
+                              color: 'var(--gold-primary)', 
+                              padding: '1px 4px', 
+                              borderRadius: '2px', 
+                              fontSize: '0.55rem', 
+                              fontWeight: 'bold',
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '2px' 
+                            }}
+                          >
+                            VIDEO
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <h4 style={{ color: 'var(--cream-primary)', fontSize: '0.95rem', fontWeight: 600 }}>{prod.name}</h4>
+                        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.78rem', color: 'var(--text-cream-muted)', marginTop: '0.2rem' }}>
+                          <span>Category: <strong style={{ color: 'var(--cream-primary)', textTransform: 'capitalize' }}>{prod.category}</strong></span>
+                          <span>Price: <strong style={{ color: 'var(--gold-primary)' }}>₦{Number(prod.price || 0).toLocaleString()}</strong></span>
+                        </div>
                       </div>
                     </div>
                     
@@ -2152,10 +2233,52 @@ export default function AdminDashboard({
                 <X size={24} />
               </button>
 
-              <h3 style={{ fontSize: '1.35rem', fontFamily: 'var(--font-serif)', color: 'var(--cream-primary)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.35rem', fontFamily: 'var(--font-serif)', color: 'var(--cream-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Edit2 size={20} style={{ color: 'var(--gold-primary)' }} />
                 Edit Product: {editingProduct.name}
               </h3>
+
+              {/* Visual Asset Previews Strip */}
+              <div 
+                style={{ 
+                  background: 'rgba(18, 1, 4, 0.6)', 
+                  border: '1px solid var(--border-light)', 
+                  borderRadius: '8px', 
+                  padding: '0.9rem', 
+                  marginBottom: '1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem'
+                }}
+              >
+                <span style={{ fontSize: '0.75rem', color: 'var(--gold-primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  🖼️ Attached Product Media & Angle Photos ({ (editingProduct.images?.length || 1) } photos + {editingProduct.video ? '1 video' : '0 videos'})
+                </span>
+                <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+                  {/* Main Image */}
+                  <div style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '2px solid var(--gold-primary)', flexShrink: 0 }}>
+                    <img src={editProdImg || editingProduct.img} alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <span style={{ position: 'absolute', top: '2px', left: '2px', background: 'var(--gold-primary)', color: 'var(--burgundy-dark)', fontSize: '0.5rem', fontWeight: 'bold', padding: '1px 3px', borderRadius: '2px' }}>COVER</span>
+                  </div>
+
+                  {/* Additional Gallery Screenshots */}
+                  {Array.isArray(editingProduct.images) && editingProduct.images.map((imgUrl, idx) => (
+                    imgUrl !== editProdImg && (
+                      <div key={idx} style={{ width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-light)', flexShrink: 0 }}>
+                        <img src={imgUrl} alt={`Angle ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )
+                  ))}
+
+                  {/* Video Clip */}
+                  {editingProduct.video && (
+                    <div style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-light)', background: '#000', flexShrink: 0 }}>
+                      <video src={editingProduct.video} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                      <span style={{ position: 'absolute', bottom: '2px', right: '2px', background: 'rgba(0,0,0,0.85)', color: 'var(--gold-primary)', fontSize: '0.5rem', fontWeight: 'bold', padding: '1px 3px', borderRadius: '2px' }}>VIDEO</span>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <form onSubmit={handleSaveProductEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div className="form-group">
@@ -2402,27 +2525,176 @@ export default function AdminDashboard({
                       </div>
                     </div>
                     
-                    <button 
-                      onClick={() => handleDeleteService(srv._id || srv.id)}
-                      style={{
-                        background: 'rgba(220, 38, 38, 0.1)',
-                        border: '1px solid rgba(220, 38, 38, 0.25)',
-                        color: '#ef4444',
-                        padding: '0.45rem',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.2s'
-                      }}
-                      title="Delete Service"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <button 
+                        onClick={() => handleOpenEditService(srv)}
+                        style={{
+                          background: 'rgba(212, 175, 55, 0.15)',
+                          border: '1px solid var(--border-light)',
+                          color: 'var(--gold-primary)',
+                          padding: '0.45rem 0.75rem',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 600
+                        }}
+                        title="Edit Service Details"
+                      >
+                        <Edit2 size={14} /> Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteService(srv._id || srv.id)}
+                        style={{
+                          background: 'rgba(220, 38, 38, 0.1)',
+                          border: '1px solid rgba(220, 38, 38, 0.25)',
+                          color: '#ef4444',
+                          padding: '0.45rem',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s'
+                        }}
+                        title="Delete Service"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* FULL EDIT SERVICE MODAL OVERLAY */}
+        {editingService && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(12, 1, 3, 0.85)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1.5rem'
+            }}
+          >
+            <div 
+              style={{
+                background: 'var(--burgundy-dark)',
+                border: '1px solid var(--border-light)',
+                borderRadius: '12px',
+                width: '100%',
+                maxWidth: '600px',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                padding: '2rem',
+                boxShadow: 'var(--shadow-xl)',
+                position: 'relative'
+              }}
+              className="animate-scale-up"
+            >
+              <button 
+                onClick={() => setEditingService(null)}
+                style={{
+                  position: 'absolute',
+                  top: '1.25rem',
+                  right: '1.25rem',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--gold-primary)',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={24} />
+              </button>
+
+              <h3 style={{ fontSize: '1.35rem', fontFamily: 'var(--font-serif)', color: 'var(--cream-primary)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Edit2 size={20} style={{ color: 'var(--gold-primary)' }} />
+                Edit Styling Service: {editingService.title}
+              </h3>
+
+              <form onSubmit={handleSaveServiceEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Service Title</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editSrvTitle}
+                    onChange={(e) => setEditSrvTitle(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="grid-cols-3" style={{ gap: '1rem' }}>
+                  <div className="form-group" style={{ gridColumn: 'span 1' }}>
+                    <label className="form-label">Price (₦)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={editSrvPrice}
+                      onChange={(e) => setEditSrvPrice(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group" style={{ gridColumn: 'span 1' }}>
+                    <label className="form-label">Duration</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editSrvDuration}
+                      onChange={(e) => setEditSrvDuration(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group" style={{ gridColumn: 'span 1' }}>
+                    <label className="form-label">Category</label>
+                    <select
+                      className="form-control"
+                      value={editSrvCategory}
+                      onChange={(e) => setEditSrvCategory(e.target.value)}
+                    >
+                      <option value="wigs">Wigs & Revamp</option>
+                      <option value="braids">Braids & Cornrows</option>
+                      <option value="extensions">Extensions</option>
+                      <option value="natural">Natural Hair</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    rows="4"
+                    className="form-control"
+                    value={editSrvDesc}
+                    onChange={(e) => setEditSrvDesc(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setEditingService(null)}
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    <Check size={16} /> Save Service Edits
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
