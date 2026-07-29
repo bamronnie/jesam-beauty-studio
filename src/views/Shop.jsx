@@ -53,32 +53,15 @@ export default function Shop({
       gallery.push({ type: 'video', url: product.video });
     }
     
-    // Prioritize the actual product.images list if it exists and is populated
+    // Prioritize the actual product.images list extracted from client videos
     if (Array.isArray(product.images) && product.images.length > 0) {
       product.images.forEach(imgUrl => {
         if (imgUrl) {
           gallery.push({ type: 'image', url: imgUrl });
         }
       });
-    } else {
-      // Fallback to primary cover image and category mocks
-      if (product.img) {
-        gallery.push({ type: 'image', url: product.img });
-      }
-      if (product.category === 'wigs') {
-        gallery.push({ type: 'image', url: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=500' });
-        gallery.push({ type: 'image', url: 'https://images.unsplash.com/photo-1579613832125-5d34a13feb2a?q=80&w=500' });
-        gallery.push({ type: 'image', url: 'https://images.unsplash.com/photo-1605497746444-ac9dbd39d675?q=80&w=500' });
-      } else if (product.category === 'extensions') {
-        gallery.push({ type: 'image', url: 'https://images.unsplash.com/photo-1605497746444-ac9dbd39d675?q=80&w=500' });
-        gallery.push({ type: 'image', url: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=500' });
-      } else if (product.category === 'care') {
-        gallery.push({ type: 'image', url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=500' });
-        gallery.push({ type: 'image', url: 'https://images.unsplash.com/photo-1620331311520-246422fd82f9?q=80&w=500' });
-      } else {
-        gallery.push({ type: 'image', url: 'https://images.unsplash.com/photo-1620331311520-246422fd82f9?q=80&w=500' });
-        gallery.push({ type: 'image', url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=500' });
-      }
+    } else if (product.img) {
+      gallery.push({ type: 'image', url: product.img });
     }
     return gallery;
   };

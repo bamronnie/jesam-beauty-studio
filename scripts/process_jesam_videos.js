@@ -9,14 +9,12 @@ if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-console.log('🎬 Processing Jesam Beauty Client Videos from:', INPUT_DIR);
+console.log('🎬 Extracting 4 Multi-Angle Images & Videos from Jesam Client Videos...');
 
-// List all MOV files in input folder
 const files = fs.readdirSync(INPUT_DIR).filter(f => f.toUpperCase().endsWith('.MOV') || f.toUpperCase().endsWith('.MP4'));
 
 console.log(`Found ${files.length} client video files.`);
 
-// Categories and names for real Jesam Beauty products
 const productTemplates = [
   { name: '26" Bone Straight HD Lace Wig', price: 195000, oldPrice: 220000, category: 'wigs', tag: 'Best Seller', desc: '100% Raw Virgin Human Hair bone straight wig with customized 13x4 HD Swiss Lace. Pre-plucked hairline and pre-bleached knots for an invisible melt.' },
   { name: '22" Deep Wave Glueless Wear & Go Wig', price: 165000, oldPrice: 185000, category: 'wigs', tag: 'Glueless', desc: 'High density deep wave texture wig with pre-cut HD lace foundation and 3D elastic security strap. Pop it on in seconds with zero glue required.' },
@@ -38,43 +36,48 @@ const productTemplates = [
 ];
 
 const processedProducts = [];
+const frameTimestamps = ['00:00:00.500', '00:00:02.500', '00:00:05.000', '00:00:07.500'];
 
 files.forEach((file, index) => {
   const inputPath = path.join(INPUT_DIR, file);
   const prodId = `jesam-p${index + 1}`;
   const videoFileName = `${prodId}.mp4`;
-  const posterFileName = `${prodId}-poster.jpg`;
-  
   const outputVideoPath = path.join(OUTPUT_DIR, videoFileName);
-  const outputPosterPath = path.join(OUTPUT_DIR, posterFileName);
 
   console.log(`\n----------------------------------------`);
   console.log(`[${index + 1}/${files.length}] Processing: ${file} -> ${prodId}`);
 
-  // Step 1: Compress video to 720p H.264
-  const scaleFilter = 'scale=-2:720';
-  const ffmpegCmd = `ffmpeg -y -i "${inputPath}" -vf "${scaleFilter}" -c:v libx264 -crf 28 -preset fast -c:a aac -b:a 96k -movflags +faststart "${outputVideoPath}"`;
-
-  try {
-    console.log('Compressing video to 720p H.264...');
-    execSync(ffmpegCmd, { stdio: 'ignore' });
-    const stats = fs.statSync(outputVideoPath);
-    console.log(`✔️ Video saved: ${(stats.size / (1024 * 1024)).toFixed(2)} MB`);
-  } catch (err) {
-    console.error(`❌ Failed to compress ${file}:`, err.message);
+  // Step 1: Compress video to 720p H.264 if not done
+  if (!fs.existsSync(outputVideoPath)) {
+    const scaleFilter = 'scale=-2:720';
+    const ffmpegCmd = `ffmpeg -y -i "${inputPath}" -vf "${scaleFilter}" -c:v libx264 -crf 28 -preset fast -c:a aac -b:a 96k -movflags +faststart "${outputVideoPath}"`;
+    try {
+      console.log('Compressing video to 720p H.264...');
+      execSync(ffmpegCmd, { stdio: 'ignore' });
+    } catch (err) {
+      console.error(`❌ Failed video compression:`, err.message);
+    }
   }
 
-  // Step 2: Extract poster image
-  const posterCmd = `ffmpeg -y -ss 00:00:01 -i "${inputPath}" -vframes 1 -q:v 2 "${outputPosterPath}"`;
-  try {
-    console.log('Extracting poster thumbnail image...');
-    execSync(posterCmd, { stdio: 'ignore' });
-    console.log(`✔️ Poster saved: ${outputPosterPath}`);
-  } catch (err) {
-    console.error(`❌ Failed poster extraction for ${file}:`, err.message);
-  }
+  // Step 2: Extract 4 separate frame screenshots at different timestamps in the video
+  const extractedImages = [];
+  frameTimestamps.forEach((ts, idx) => {
+    const imgFileName = `${prodId}-img${idx + 1}.jpg`;
+    const outputImgPath = path.join(OUTPUT_DIR, imgFileName);
+    const extractCmd = `ffmpeg -y -ss ${ts} -i "${inputPath}" -vframes 1 -q:v 2 "${outputImgPath}"`;
+    
+    try {
+      execSync(extractCmd, { stdio: 'ignore' });
+      extractedImages.push(`/videos/${imgFileName}`);
+      console.log(`  📸 Screenshot ${idx + 1}/4 extracted at ${ts} -> ${imgFileName}`);
+    } catch (err) {
+      console.error(`  ❌ Failed screenshot ${idx + 1}:`, err.message);
+    }
+  });
 
+  const mainImage = extractedImages[0] || `/videos/${prodId}-img1.jpg`;
   const tmpl = productTemplates[index % productTemplates.length];
+
   processedProducts.push({
     _id: prodId,
     id: prodId,
@@ -83,8 +86,9 @@ files.forEach((file, index) => {
     oldPrice: tmpl.oldPrice,
     category: tmpl.category,
     tag: tmpl.tag,
-    img: `/videos/${posterFileName}`,
-    poster: `/videos/${posterFileName}`,
+    img: mainImage,
+    poster: mainImage,
+    images: extractedImages,
     video: `/videos/${videoFileName}`,
     desc: tmpl.desc,
     rating: 4.8 + Math.round((index % 3) * 0.1 * 10) / 10,
@@ -92,9 +96,9 @@ files.forEach((file, index) => {
   });
 });
 
-console.log('\n✅ All 17 Client Videos Processed!');
+console.log('\n✅ All 17 Client Videos Extracted with 4 Images Each!');
 
 // Output JSON file for seeding
 const jsonPath = path.join(process.cwd(), 'scripts', 'jesam_products.json');
 fs.writeFileSync(jsonPath, JSON.stringify(processedProducts, null, 2));
-console.log(`💾 Saved catalog data to ${jsonPath}`);
+console.log(`💾 Saved catalog data with 4 images per video to ${jsonPath}`);
