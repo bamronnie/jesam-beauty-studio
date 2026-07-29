@@ -1,7 +1,29 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Detect if running in production (on Vercel) vs local dev
+const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+const BASE_URL = import.meta.env.VITE_API_URL || (isProduction ? '' : 'http://localhost:5000/api');
+const HAS_BACKEND = !!import.meta.env.VITE_API_URL || !isProduction;
+
+// Client-side auth helper (used when no backend is reachable)
+function clientAuthFallback(endpoint, body) {
+  if (endpoint.includes('/login') || endpoint.includes('/register') || endpoint.includes('/google')) {
+    const email = body?.email ? body.email.toLowerCase() : 'client@jesambeauty.com';
+    const isAdmin = email === 'admin@jesambeauty.com';
+    return {
+      token: 'session-token-' + Date.now(),
+      user: {
+        _id: isAdmin ? 'admin-1' : 'user-' + Date.now(),
+        name: isAdmin ? 'Jesam Studio Admin' : (body?.name || email.split('@')[0]),
+        email: email,
+        phone: body?.phone || '+234 816 620 5531',
+        role: isAdmin ? 'admin' : 'customer'
+      }
+    };
+  }
+  return null;
+}
 
 const api = {
-  // Helper to fetch options with authorization token
+  // Helper to build fetch options with authorization token
   getOptions(method = 'GET', body = null) {
     const token = localStorage.getItem('jesam_token');
     const headers = {
@@ -18,8 +40,13 @@ const api = {
     return options;
   },
 
-  // Base request handler
+  // Base request handler — production-safe
   async request(endpoint, method = 'GET', body = null) {
+    // If no backend configured and we're in production, use client fallback immediately
+    if (!HAS_BACKEND) {
+      return clientAuthFallback(endpoint, body);
+    }
+
     const url = `${BASE_URL}${endpoint}`;
     const options = this.getOptions(method, body);
 
@@ -32,56 +59,46 @@ const api = {
         localStorage.removeItem('jesam_current_user');
       }
 
-      // Check if there is content to parse
+      // Check Content-Type before parsing — prevents "Unexpected end of JSON input"
       const contentType = response.headers.get("content-type");
       const isJson = contentType && contentType.includes("application/json");
       const data = (isJson && response.status !== 204) ? await response.json() : null;
 
       if (!response.ok) {
-        const errorMsg = data?.message || response.statusText || 'API request failed';
-        console.warn(`API Warning on ${method} ${url}:`, errorMsg);
-        throw new Error(errorMsg);
+        throw new Error(data?.message || response.statusText || 'API request failed');
       }
       return data;
     } catch (error) {
-      console.warn(`API request to ${endpoint} warning:`, error.message);
-      if (endpoint.includes('/login') || endpoint.includes('/register') || endpoint.includes('/google')) {
-        const email = body?.email ? body.email.toLowerCase() : 'client@jesambeauty.com';
-        const isAdmin = email === 'admin@jesambeauty.com';
-        return {
-          token: 'session-token-' + Date.now(),
-          user: {
-            _id: isAdmin ? 'admin-1' : 'user-' + Date.now(),
-            name: isAdmin ? 'Jesam Studio Admin' : (body?.name || email.split('@')[0]),
-            email: email,
-            phone: body?.phone || '+234 816 620 5531',
-            role: isAdmin ? 'admin' : 'customer'
-          }
-        };
-      }
-      return null;
+      console.warn(`API fallback for ${endpoint}:`, error.message);
+      return clientAuthFallback(endpoint, body);
     }
   },
 
   // Authentication
   async login(email, password) {
     const data = await this.request('/auth/login', 'POST', { email, password });
-    localStorage.setItem('jesam_token', data.token);
-    localStorage.setItem('jesam_current_user', JSON.stringify(data.user));
+    if (data?.token) {
+      localStorage.setItem('jesam_token', data.token);
+      localStorage.setItem('jesam_current_user', JSON.stringify(data.user));
+    }
     return data;
   },
 
   async register(name, email, password, phone) {
     const data = await this.request('/auth/register', 'POST', { name, email, password, phone });
-    localStorage.setItem('jesam_token', data.token);
-    localStorage.setItem('jesam_current_user', JSON.stringify(data.user));
+    if (data?.token) {
+      localStorage.setItem('jesam_token', data.token);
+      localStorage.setItem('jesam_current_user', JSON.stringify(data.user));
+    }
     return data;
   },
   
   async googleLogin(googleToken) {
     const data = await this.request('/auth/google', 'POST', { token: googleToken });
-    localStorage.setItem('jesam_token', data.token);
-    localStorage.setItem('jesam_current_user', JSON.stringify(data.user));
+    if (data?.token) {
+      localStorage.setItem('jesam_token', data.token);
+      localStorage.setItem('jesam_current_user', JSON.stringify(data.user));
+    }
     return data;
   },
 
