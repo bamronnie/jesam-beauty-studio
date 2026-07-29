@@ -7,11 +7,11 @@ export default function Hero({ setActiveView, addToCart, products = [] }) {
   const [hoveredProductId, setHoveredProductId] = useState(null);
 
   const categories = [
-    { name: "Glueless Wigs", query: "curly", img: "https://images.unsplash.com/photo-1579613832125-5d34a13feb2a?q=80&w=150" },
-    { name: "HD Lace Wigs", query: "straight", img: "https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=150" },
-    { name: "Colored Wigs", query: "balayage", img: "https://images.unsplash.com/photo-1620331311520-246422fd82f9?q=80&w=150" },
-    { name: "Hair Bundles", query: "extensions", img: "https://images.unsplash.com/photo-1605497746444-ac9dbd39d675?q=80&w=150" },
-    { name: "Lace Closures", query: "closure", img: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=150" }
+    { name: "Glueless Wigs", tag: "HOT", img: "/videos/jesam-p2-img1.jpg" },
+    { name: "HD Lace Wigs", tag: "BEST SELLER", img: "/videos/jesam-p1-img1.jpg" },
+    { name: "Colored Wigs", tag: "CUSTOM", img: "/videos/jesam-p4-img1.jpg" },
+    { name: "Hair Bundles", tag: "RAW HAIR", img: "/videos/jesam-p6-img1.jpg" },
+    { name: "Lace Closures", tag: "HD LACE", img: "/videos/jesam-p10-img1.jpg" }
   ];
 
   const handleCategoryClick = () => {
@@ -142,16 +142,16 @@ export default function Hero({ setActiveView, addToCart, products = [] }) {
         </div>
       </section>
 
-      {/* 2. UNICE-INSPIRED CATEGORIES CIRCLES */}
+      {/* 2. LUXURY CATEGORY QUICK CIRCLES BAR */}
       <section style={{ padding: '3.5rem 0', background: 'var(--burgundy-deep)', borderBottom: '1px solid var(--border-light)' }}>
         <div className="container">
           <div 
             style={{ 
               display: 'flex', 
-              justifyContent: 'space-around', 
+              justifyContent: 'center', 
               alignItems: 'center', 
               flexWrap: 'wrap',
-              gap: '2rem'
+              gap: '2.5rem'
             }}
             id="category-circles-list"
           >
@@ -163,41 +163,79 @@ export default function Hero({ setActiveView, addToCart, products = [] }) {
                   display: 'flex', 
                   flexDirection: 'column', 
                   alignItems: 'center', 
-                  gap: '0.8rem',
+                  gap: '0.85rem',
                   cursor: 'pointer',
-                  width: '100px'
+                  width: '110px',
+                  position: 'relative'
                 }}
                 className="category-circle-item"
               >
+                {/* Floating Gold Tag Badge */}
+                {cat.tag && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      zIndex: 3,
+                      background: 'linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%)',
+                      color: 'var(--burgundy-dark)',
+                      fontSize: '0.58rem',
+                      fontWeight: 800,
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: '20px',
+                      letterSpacing: '0.5px',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    {cat.tag}
+                  </span>
+                )}
+
+                {/* Circle Container with Gold Ring */}
                 <div 
                   style={{
-                    width: '90px',
-                    height: '90px',
+                    width: '96px',
+                    height: '96px',
                     borderRadius: '50%',
                     overflow: 'hidden',
-                    border: '2px solid var(--border-light)',
-                    transition: 'all 0.3s ease',
-                    boxShadow: 'var(--shadow-sm)',
-                    background: 'var(--burgundy-dark)'
+                    border: '2px solid var(--gold-primary)',
+                    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    boxShadow: '0 4px 15px rgba(212, 175, 55, 0.25)',
+                    background: 'var(--burgundy-dark)',
+                    position: 'relative'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--gold-primary)';
-                    e.currentTarget.style.transform = 'scale(1.08)';
+                    e.currentTarget.style.borderColor = '#ffffff';
+                    e.currentTarget.style.transform = 'translateY(-5px) scale(1.06)';
+                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(212, 175, 55, 0.45)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--border-light)';
-                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.borderColor = 'var(--gold-primary)';
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(212, 175, 55, 0.25)';
                   }}
                 >
-                  <img src={cat.img} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img 
+                    src={cat.img} 
+                    alt={cat.name} 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover',
+                      display: 'block'
+                    }} 
+                  />
                 </div>
+                
                 <span 
                   style={{ 
-                    fontSize: '0.8rem', 
-                    fontWeight: 600, 
+                    fontSize: '0.85rem', 
+                    fontWeight: 700, 
                     color: 'var(--cream-primary)', 
                     textAlign: 'center',
-                    letterSpacing: '0.5px'
+                    letterSpacing: '0.3px',
+                    lineHeight: '1.2'
                   }}
                 >
                   {cat.name}
