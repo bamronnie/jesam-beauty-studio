@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Calendar, Star, Eye, Plus, ArrowRight, Zap, X } from 'lucide-react';
+import { ShoppingBag, Calendar, Star, Eye, Plus, ArrowRight, Zap, X, Play } from 'lucide-react';
 
 export default function Hero({ setActiveView, addToCart, products = [] }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
