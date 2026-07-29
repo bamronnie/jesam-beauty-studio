@@ -32,7 +32,7 @@ server/.env
 # Large raw uncompressed media
 *uhd_4096_2160_25fps.mp4
 WhatsApp Image*.jpeg
-public/videos/
+
 
 
 
