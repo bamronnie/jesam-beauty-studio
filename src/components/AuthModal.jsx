@@ -342,9 +342,9 @@ export default function AuthModal({
               /* LOGIN FORM */
               <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} id="login-form">
                 <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
-                  <h3 style={{ fontSize: '1.5rem', color: 'var(--cream-primary)' }}>Welcome back to Jesam Beauty</h3>
+                  <h3 style={{ fontSize: '1.5rem', color: 'var(--cream-primary)' }}>Sign In to Jesam Beauty</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-cream-muted)' }}>
-                    Enter credentials to view VIP loyalty points & order history.
+                    Enter your email address and password to access your account.
                   </p>
                 </div>
 
@@ -357,7 +357,7 @@ export default function AuthModal({
                       className="form-control"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="e.g. customer@jesambeauty.com"
+                      placeholder="e.g. client@example.com"
                       required
                       style={{ paddingLeft: '2.75rem', width: '100%' }}
                       id="login-email-input"
@@ -385,39 +385,14 @@ export default function AuthModal({
                 <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }} id="login-submit-btn">
                   Sign In
                 </button>
-
-                <button
-                  type="button"
-                  onClick={triggerQuickAdminLogin}
-                  className="btn btn-secondary"
-                  style={{ width: '100%', marginTop: '0.5rem', background: 'rgba(212, 175, 55, 0.15)', borderColor: 'var(--gold-primary)', color: 'var(--gold-primary)', fontWeight: 700 }}
-                  id="quick-admin-login-btn"
-                >
-                  ⚡ 1-Click Admin Portal Access
-                </button>
-
-                <div 
-                  style={{ 
-                    marginTop: '0.75rem', 
-                    padding: '0.75rem', 
-                    background: 'rgba(212, 175, 55, 0.05)', 
-                    border: '1px dashed var(--gold-primary)', 
-                    borderRadius: '4px',
-                    fontSize: '0.8rem',
-                    textAlign: 'center'
-                  }}
-                >
-                  <strong>Admin Credentials:</strong><br />
-                  Email: <span style={{ color: 'var(--gold-primary)' }}>admin@jesambeauty.com</span> | Password: <span style={{ color: 'var(--gold-primary)' }}>admin123</span>
-                </div>
               </form>
             ) : (
               /* REGISTRATION FORM */
               <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} id="register-form">
                 <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
-                  <h3 style={{ fontSize: '1.5rem', color: 'var(--cream-primary)' }}>Join the Jesam VIP Club</h3>
+                  <h3 style={{ fontSize: '1.5rem', color: 'var(--cream-primary)' }}>Create an Account</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-cream-muted)' }}>
-                    Get 100 free welcome points and unlock private styling discounts instantly.
+                    Sign up to manage your salon appointments and track orders.
                   </p>
                 </div>
 
