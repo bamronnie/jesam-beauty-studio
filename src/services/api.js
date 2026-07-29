@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://jesam-beauty-backend.onrender.com/api';
 
 const api = {
   // Helper to fetch options with authorization token
