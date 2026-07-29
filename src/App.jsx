@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CheckoutModal from './components/CheckoutModal';
 import CartDrawer from './components/CartDrawer';
+import WhatsAppWidget from './components/WhatsAppWidget';
 import api from './services/api';
 import { Check, X, Sparkles } from 'lucide-react';
 
@@ -566,6 +567,9 @@ export default function App() {
         currentUser={currentUser}
         showNotification={showNotification}
       />
+      {/* Floating WhatsApp Express Chat Widget */}
+      <WhatsAppWidget />
+
       {/* Toast Notifications Container */}
       <div className="toast-container">
         {notifications.map((n) => (
