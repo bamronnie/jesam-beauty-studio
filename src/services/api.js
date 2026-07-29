@@ -120,6 +120,10 @@ const api = {
     return this.request('/bookings', 'GET');
   },
 
+  async getReservedTimeSlots(date) {
+    return this.request(`/bookings/reserved?date=${encodeURIComponent(date)}`, 'GET');
+  },
+
   async createBooking(bookingData) {
     return this.request('/bookings', 'POST', bookingData);
   },

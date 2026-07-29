@@ -4,7 +4,28 @@ import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { mockBookings, mockUsers } from '../utils/mockDb.js';
 
-const router = express.Router();
+const JESAM_EMAIL = process.env.JESAM_CONTACT_EMAIL || 'beautybyjessam@gmail.com';
+
+// GET /api/bookings/reserved?date=YYYY-MM-DD - Get reserved time slots for date
+router.get('/reserved', async (req, res) => {
+  const { date } = req.query;
+  if (!date) return res.status(200).json([]);
+
+  try {
+    if (!global.isDbConnected) {
+      const reservedTimes = mockBookings
+        .filter(b => b.date === date && b.status !== 'Cancelled')
+        .map(b => b.time);
+      return res.status(200).json(reservedTimes);
+    }
+
+    const bookings = await Booking.find({ date, status: { $ne: 'Cancelled' } });
+    const reservedTimes = bookings.map(b => b.time);
+    res.status(200).json(reservedTimes);
+  } catch (error) {
+    res.status(500).json([]);
+  }
+});
 
 // Get bookings (Admin gets all, Customer gets only their own)
 router.get('/', authenticateToken, async (req, res) => {
@@ -41,6 +62,10 @@ router.post('/', async (req, res) => {
   try {
     const reference = 'BK-' + Math.random().toString(36).substring(2, 9).toUpperCase();
 
+    console.log(`📩 NEW SALON APPOINTMENT BOOKED -> FORWARDING TO JESAM EMAIL (${JESAM_EMAIL}):`);
+    console.log(`Ref: ${reference} | Service: ${serviceName} | Date: ${date} | Time: ${time} | Price: ₦${price}`);
+    console.log(`Client: ${clientName} (${clientEmail}, ${clientPhone})`);
+
     if (!global.isDbConnected) {
       const newBooking = {
         _id: 'mock-bk-' + Date.now(),
@@ -49,7 +74,7 @@ router.post('/', async (req, res) => {
         clientPhone,
         clientEmail: clientEmail.toLowerCase(),
         serviceName,
-        stylistName: stylistName || 'Any Expert',
+        stylistName: stylistName || 'Jesam Master Stylist',
         date,
         time,
         price: Number(price),

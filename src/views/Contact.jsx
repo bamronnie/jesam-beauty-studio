@@ -84,12 +84,12 @@ export default function Contact() {
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', fontSize: '0.9rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(212,175,55,0.08)', paddingBottom: '0.4rem' }}>
-                  <span>Monday - Saturday</span>
-                  <strong style={{ color: 'var(--cream-primary)' }}>09:00 AM - 07:00 PM</strong>
+                  <span>Monday - Friday</span>
+                  <strong style={{ color: 'var(--cream-primary)' }}>09:00 AM - 05:00 PM</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.4rem', color: '#ff4d4d' }}>
-                  <span>Sunday</span>
-                  <strong>CLOSED (Staff rest day)</strong>
+                  <span>Saturday & Sunday</span>
+                  <strong>CLOSED (Weekend Off)</strong>
                 </div>
               </div>
             </div>

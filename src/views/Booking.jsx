@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, User, Clock, CheckCircle2, ChevronRight, ChevronLeft, CalendarDays } from 'lucide-react';
+import { Calendar, Clock, CheckCircle2, ChevronRight, ChevronLeft, CalendarDays, ShoppingBag } from 'lucide-react';
+import api from '../services/api';
 
 export default function Booking({ 
   preSelectedService, 
@@ -9,12 +10,15 @@ export default function Booking({
   currentUser,
   showNotification
 }) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1); // 1: Service, 2: Date, 3: Time, 4: Details, 5: Success Receipt
   const [selectedService, setSelectedService] = useState(null);
-  const [selectedStylist, setSelectedStylist] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   
+  // Reserved times fetched from backend/db for selected date
+  const [reservedTimes, setReservedTimes] = useState([]);
+  const [isLoadingReserved, setIsLoadingReserved] = useState(false);
+
   // User info state
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
@@ -45,31 +49,44 @@ export default function Booking({
 
   const services = initialServices.length > 0 ? initialServices : defaultServices;
 
-  const stylists = [
-    { id: 'st1', name: 'Amara Nwachukwu', role: 'Master Stylist', img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200' },
-    { id: 'st2', name: 'Bisi Adebayo', role: 'Braider', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200' },
-    { id: 'st3', name: 'Chidi Okafor', role: 'Revamping Tech', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200' }
+  // Operating Hours: Monday to Friday 9:00 AM to 5:00 PM
+  const allTimeSlots = [
+    '09:00 AM',
+    '10:30 AM',
+    '12:00 PM',
+    '01:30 PM',
+    '03:00 PM',
+    '04:30 PM'
   ];
 
-  const timeSlots = [
-    { time: '09:00 AM', available: true },
-    { time: '11:00 AM', available: true },
-    { time: '01:00 PM', available: false },
-    { time: '03:00 PM', available: true },
-    { time: '05:00 PM', available: true }
-  ];
+  // Fetch already booked time slots whenever selectedDate changes
+  useEffect(() => {
+    if (selectedDate) {
+      setIsLoadingReserved(true);
+      api.getReservedTimeSlots(selectedDate)
+        .then(booked => {
+          setReservedTimes(Array.isArray(booked) ? booked : []);
+        })
+        .catch(err => {
+          console.warn('Failed to fetch reserved times:', err);
+          setReservedTimes([]);
+        })
+        .finally(() => {
+          setIsLoadingReserved(false);
+        });
+    }
+  }, [selectedDate]);
 
   // Pre-fill service hook
   useEffect(() => {
     if (preSelectedService) {
-      // Find full service details or matching name
       const matched = services.find(s => s.id === preSelectedService.id || s.title === preSelectedService.title);
       if (matched) {
         setSelectedService(matched);
       } else {
         setSelectedService(preSelectedService);
       }
-      setStep(2); // Jump direct to select stylist
+      setStep(2); // Jump direct to Date step
       clearPreSelectedService(); // Consume it
     }
   }, [preSelectedService, services, clearPreSelectedService]);
@@ -85,11 +102,12 @@ export default function Booking({
   for (let d = 1; d <= totalDays; d++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const dayOfWeek = new Date(year, month, d).getDay();
-    // Exclude Sundays (salon closed)
+    // Monday to Friday ONLY (0 = Sun, 6 = Sat closed)
+    const isClosed = dayOfWeek === 0 || dayOfWeek === 6;
     daysArray.push({
       day: d,
       dateString: dateStr,
-      isClosed: dayOfWeek === 0,
+      isClosed,
       weekdayLabel: new Date(year, month, d).toLocaleString('en-NG', { weekday: 'short' })
     });
   }
@@ -104,7 +122,7 @@ export default function Booking({
     const bookingPayload = {
       serviceName: selectedService.title,
       price: selectedService.price,
-      stylistName: selectedStylist.name,
+      stylistName: 'Jesam Master Stylist',
       date: selectedDate,
       time: selectedTimeSlot,
       clientName: userName,
@@ -116,7 +134,12 @@ export default function Booking({
     try {
       const saved = await onBookingComplete(bookingPayload);
       setConfirmedBooking(saved);
-      setStep(6); // Go to success receipt card
+
+      // Trigger mailto email dispatch to beautybyjessam@gmail.com
+      const mailtoUrl = `mailto:beautybyjessam@gmail.com?subject=${encodeURIComponent(`New Salon Appointment: ${selectedService.title} - ${selectedDate} ${selectedTimeSlot}`)}&body=${encodeURIComponent(`NEW APPOINTMENT BOOKING DETAILS:\n\nReference ID: ${saved?.reference || 'N/A'}\nService: ${selectedService.title}\nDate: ${selectedDate}\nTime Slot: ${selectedTimeSlot}\nPrice: ₦${Number(selectedService.price).toLocaleString()}\n\nClient Name: ${userName}\nClient Email: ${userEmail}\nClient Phone: ${userPhone}\nNotes: ${notes || 'None'}`)}`;
+      window.open(mailtoUrl, '_blank');
+
+      setStep(5); // Go to success receipt card
     } catch (err) {
       // handled in parent
     }
@@ -124,7 +147,6 @@ export default function Booking({
 
   const resetWizard = () => {
     setSelectedService(null);
-    setSelectedStylist(null);
     setSelectedDate(null);
     setSelectedTimeSlot(null);
     setUserName('');
@@ -140,18 +162,19 @@ export default function Booking({
       style={{
         background: 'var(--burgundy-dark)',
         borderTop: '1px solid var(--border-light)',
-        paddingTop: '9.5rem'
+        paddingTop: '9.5rem',
+        paddingBottom: '5rem'
       }}
       id="booking-section"
     >
       <div className="container">
         {/* Title details */}
-        {step < 6 && (
+        {step < 5 && (
           <div className="section-header">
             <span className="section-tag">Book Salon Visit</span>
             <h2 className="section-title">Schedule An Appointment</h2>
             <p className="section-desc">
-              Experience signature salon services in 5 easy steps. Secure your styling date in real time.
+              Select your styling service, pick an available Monday–Friday time slot, and confirm your visit.
             </p>
           </div>
         )}
@@ -167,8 +190,8 @@ export default function Booking({
           }}
           id="booking-wizard-card"
         >
-          {/* Progress Indicators */}
-          {step < 6 && (
+          {/* Progress Indicators (4 Steps) */}
+          {step < 5 && (
             <div 
               style={{
                 display: 'flex',
@@ -183,10 +206,9 @@ export default function Booking({
             >
               {[
                 { number: 1, label: 'Service' },
-                { number: 2, label: 'Stylist' },
-                { number: 3, label: 'Date' },
-                { number: 4, label: 'Time' },
-                { number: 5, label: 'Details' }
+                { number: 2, label: 'Date' },
+                { number: 3, label: 'Time' },
+                { number: 4, label: 'Details' }
               ].map((s) => (
                 <div 
                   key={s.number} 
@@ -194,15 +216,15 @@ export default function Booking({
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.4rem',
-                    fontSize: '0.8rem',
+                    fontSize: '0.85rem',
                     fontWeight: 600,
                     color: step === s.number ? 'var(--gold-primary)' : step > s.number ? 'var(--cream-primary)' : 'var(--text-cream-muted)'
                   }}
                 >
                   <span 
                     style={{
-                      width: '24px',
-                      height: '24px',
+                      width: '26px',
+                      height: '26px',
                       borderRadius: '50%',
                       background: step === s.number ? 'var(--gold-primary)' : step > s.number ? 'var(--burgundy-primary)' : 'transparent',
                       border: '1px solid',
@@ -231,7 +253,7 @@ export default function Booking({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }} id="booking-service-list">
                 {services.map((srv) => (
                   <div
-                    key={srv.id}
+                    key={srv.id || srv._id}
                     onClick={() => {
                       setSelectedService(srv);
                       setStep(2);
@@ -257,10 +279,10 @@ export default function Booking({
                   >
                     <div>
                       <h4 style={{ color: 'var(--cream-primary)', fontWeight: 600 }}>{srv.title}</h4>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-cream-muted)', marginTop: '0.2rem' }}>{srv.desc}</p>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-cream-muted)', marginTop: '0.2rem' }}>{srv.desc || srv.description || 'Signature Jesam Beauty service.'}</p>
                     </div>
                     <div style={{ fontWeight: 'bold', color: 'var(--gold-primary)', fontSize: '1.1rem' }}>
-                      ₦{srv.price.toLocaleString()}
+                      ₦{Number(srv.price || 0).toLocaleString()}
                     </div>
                   </div>
                 ))}
@@ -268,61 +290,14 @@ export default function Booking({
             </div>
           )}
 
-          {/* STEP 2: Select Stylist */}
+          {/* STEP 2: Select Date (Mon - Fri Only) */}
           {step === 2 && (
             <div id="booking-step-2">
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--cream-primary)' }}>
-                Choose Your Preferred Stylist
-              </h3>
-              <div 
-                style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(3, 1fr)', 
-                  gap: '1.5rem' 
-                }}
-                id="booking-stylist-grid"
-              >
-                {stylists.map((st) => (
-                  <div
-                    key={st.id}
-                    onClick={() => {
-                      setSelectedStylist(st);
-                      setStep(3);
-                    }}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      padding: '1.5rem',
-                      background: selectedStylist?.id === st.id ? 'rgba(212, 175, 55, 0.08)' : 'rgba(18, 1, 4, 0.4)',
-                      border: '1px solid',
-                      borderColor: selectedStylist?.id === st.id ? 'var(--gold-primary)' : 'var(--border-light)',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    <div style={{ width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border-light)', marginBottom: '1rem' }}>
-                      <img src={st.img} alt={st.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                    <h4 style={{ color: 'var(--cream-primary)', fontSize: '1.1rem', fontWeight: 600 }}>{st.name}</h4>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--gold-primary)', marginTop: '0.2rem' }}>{st.role}</span>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => setStep(1)} className="btn btn-secondary" style={{ marginTop: '2rem' }}>Back</button>
-            </div>
-          )}
-
-          {/* STEP 3: Select Date */}
-          {step === 3 && (
-            <div id="booking-step-3">
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--cream-primary)' }}>
                 Select Styling Date
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-cream-muted)', marginBottom: '1.5rem' }}>
-                Currently booking for <strong>{monthName} {year}</strong>. Jesam Beauty is closed on Sundays.
+                Currently booking for <strong>{monthName} {year}</strong>. Operating Hours: <strong>Monday – Friday (09:00 AM – 05:00 PM)</strong>. Closed on Weekends.
               </p>
               
               <div 
@@ -356,7 +331,7 @@ export default function Booking({
                       disabled={isDisabled}
                       onClick={() => {
                         setSelectedDate(dayObj.dateString);
-                        setStep(4);
+                        setStep(3);
                       }}
                       style={{
                         background: isSelected ? 'var(--gold-primary)' : 'rgba(18, 1, 4, 0.5)',
@@ -383,64 +358,80 @@ export default function Booking({
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                <button onClick={() => setStep(1)} className="btn btn-secondary">Back</button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Select Time Slot (9 AM - 5 PM Window) */}
+          {step === 3 && (
+            <div id="booking-step-3">
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--cream-primary)' }}>
+                Select Appointment Time Slot
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-cream-muted)', marginBottom: '1.5rem' }}>
+                Available slots for <strong>{selectedDate}</strong> (09:00 AM – 05:00 PM). Booked times are locked automatically.
+              </p>
+
+              {isLoadingReserved ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--gold-primary)' }}>
+                  Loading available time slots...
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }} id="booking-time-slots">
+                  {allTimeSlots.map((timeString, index) => {
+                    const isBooked = reservedTimes.includes(timeString);
+                    const isSelected = selectedTimeSlot === timeString;
+
+                    return (
+                      <button
+                        key={index}
+                        disabled={isBooked}
+                        onClick={() => {
+                          setSelectedTimeSlot(timeString);
+                          setStep(4);
+                        }}
+                        style={{
+                          width: '100%',
+                          background: isSelected ? 'var(--gold-primary)' : isBooked ? 'rgba(255, 77, 77, 0.05)' : 'rgba(18, 1, 4, 0.4)',
+                          border: '1px solid',
+                          borderColor: isSelected ? 'var(--gold-primary)' : isBooked ? 'rgba(255, 77, 77, 0.2)' : 'var(--border-light)',
+                          color: isSelected ? 'var(--burgundy-dark)' : isBooked ? '#ff4d4d' : 'var(--cream-primary)',
+                          padding: '1rem',
+                          fontSize: '1rem',
+                          fontWeight: 600,
+                          borderRadius: '6px',
+                          cursor: isBooked ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          transition: 'all 0.2s',
+                          opacity: isBooked ? 0.6 : 1
+                        }}
+                        id={`time-slot-${index}`}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Clock size={16} />
+                          <span>{timeString}</span>
+                        </div>
+                        <span style={{ fontSize: '0.78rem', fontWeight: 'bold' }}>
+                          {isBooked ? '❌ BOOKED & RESERVED' : '✓ AVAILABLE'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
                 <button onClick={() => setStep(2)} className="btn btn-secondary">Back</button>
               </div>
             </div>
           )}
 
-          {/* STEP 4: Select Time Slot */}
+          {/* STEP 4: Confirm Details */}
           {step === 4 && (
             <div id="booking-step-4">
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--cream-primary)' }}>
-                Select Appointment Time Slot
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }} id="booking-time-slots">
-                {timeSlots.map((slot, index) => (
-                  <button
-                    key={index}
-                    disabled={!slot.available}
-                    onClick={() => {
-                      setSelectedTimeSlot(slot.time);
-                      setStep(5);
-                    }}
-                    style={{
-                      width: '100%',
-                      background: selectedTimeSlot === slot.time ? 'var(--gold-primary)' : 'rgba(18, 1, 4, 0.4)',
-                      border: '1px solid',
-                      borderColor: selectedTimeSlot === slot.time ? 'var(--gold-primary)' : 'var(--border-light)',
-                      color: selectedTimeSlot === slot.time ? 'var(--burgundy-dark)' : !slot.available ? '#443336' : 'var(--cream-primary)',
-                      padding: '1rem',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      borderRadius: '6px',
-                      cursor: slot.available ? 'pointer' : 'default',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      transition: 'all 0.2s'
-                    }}
-                    id={`time-slot-${index}`}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Clock size={16} />
-                      <span>{slot.time}</span>
-                    </div>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>
-                      {slot.available ? 'AVAILABLE' : 'BOOKED'}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                <button onClick={() => setStep(3)} className="btn btn-secondary">Back</button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 5: Add Billing details */}
-          {step === 5 && (
-            <div id="booking-step-5">
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--cream-primary)' }}>
                 Confirm Booking Details
               </h3>
@@ -485,7 +476,7 @@ export default function Booking({
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Special Notes / Requests</label>
+                    <label className="form-label">Special Notes / Styling Requests</label>
                     <textarea
                       rows="3"
                       className="form-control"
@@ -497,9 +488,9 @@ export default function Booking({
                   </div>
 
                   <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                    <button type="button" onClick={() => setStep(4)} className="btn btn-secondary">Back</button>
+                    <button type="button" onClick={() => setStep(3)} className="btn btn-secondary">Back</button>
                     <button type="submit" className="btn btn-primary" style={{ flex: 1 }} id="booking-submit-final-btn">
-                      Confirm Appointment
+                      Confirm & Send Booking
                     </button>
                   </div>
                 </form>
@@ -528,17 +519,17 @@ export default function Booking({
                       <div style={{ fontWeight: 600, color: 'var(--cream-primary)' }}>{selectedService?.title}</div>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--text-cream-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Stylist</span>
-                      <div style={{ fontWeight: 600, color: 'var(--cream-primary)' }}>{selectedStylist?.name}</div>
-                    </div>
-                    <div>
                       <span style={{ color: 'var(--text-cream-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Date & Time</span>
                       <div style={{ fontWeight: 600, color: 'var(--cream-primary)' }}>{selectedDate} at {selectedTimeSlot}</div>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-cream-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Recipient Email</span>
+                      <div style={{ fontWeight: 600, color: 'var(--gold-primary)', fontSize: '0.8rem' }}>beautybyjessam@gmail.com</div>
                     </div>
                     <div style={{ borderTop: '1px solid rgba(212, 175, 55, 0.1)', paddingTop: '0.8rem' }}>
                       <span style={{ color: 'var(--text-cream-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Service Price</span>
                       <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--gold-primary)', marginTop: '0.1rem' }}>
-                        ₦{selectedService?.price.toLocaleString()}
+                        ₦{Number(selectedService?.price || 0).toLocaleString()}
                       </div>
                     </div>
                   </div>
@@ -547,8 +538,8 @@ export default function Booking({
             </div>
           )}
 
-          {/* STEP 6: Success Confirmation */}
-          {step === 6 && (
+          {/* STEP 5: Success Confirmation */}
+          {step === 5 && (
             <div 
               style={{
                 textAlign: 'center',
@@ -562,10 +553,10 @@ export default function Booking({
             >
               <CheckCircle2 size={60} style={{ color: '#4BB543' }} />
               <h3 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', color: 'var(--cream-primary)' }}>
-                Booking Confirmed!
+                Booking Confirmed & Sent!
               </h3>
-              <p style={{ fontSize: '1rem', color: 'var(--text-cream-muted)', maxWidth: '500px', lineHeight: '1.7' }}>
-                We've locked in your appointment. A confirmation email with preparation details has been sent to <strong>{userEmail}</strong>.
+              <p style={{ fontSize: '1rem', color: 'var(--text-cream-muted)', maxWidth: '520px', lineHeight: '1.7' }}>
+                Your appointment time slot has been locked. A notification has been sent directly to <strong>beautybyjessam@gmail.com</strong> and logged in the Admin Dashboard.
               </p>
 
               <div 
@@ -585,9 +576,9 @@ export default function Booking({
               >
                 <div><span style={{ color: 'var(--gold-primary)' }}>Reference ID:</span> <strong>{confirmedBooking?.reference || 'N/A'}</strong></div>
                 <div><span style={{ color: 'var(--gold-primary)' }}>Service styling:</span> {selectedService?.title}</div>
-                <div><span style={{ color: 'var(--gold-primary)' }}>Stylist expert:</span> {selectedStylist?.name}</div>
-                <div><span style={{ color: 'var(--gold-primary)' }}>Date & Time:</span> {selectedDate} at {selectedTimeSlot}</div>
-                <div><span style={{ color: 'var(--gold-primary)' }}>Client contact:</span> {userName} ({userPhone})</div>
+                <div><span style={{ color: 'var(--gold-primary)' }}>Date & Time Slot:</span> {selectedDate} at {selectedTimeSlot}</div>
+                <div><span style={{ color: 'var(--gold-primary)' }}>Client Contact:</span> {userName} ({userPhone})</div>
+                <div><span style={{ color: 'var(--gold-primary)' }}>Client Email:</span> {userEmail}</div>
               </div>
 
               <button onClick={resetWizard} className="btn btn-primary" style={{ marginTop: '1.5rem', width: '200px' }} id="booking-success-finish-btn">
@@ -602,10 +593,6 @@ export default function Booking({
         @media (max-width: 900px) {
           #booking-wizard-card {
             padding: 1.5rem !important;
-          }
-          #booking-stylist-grid {
-            grid-template-columns: 1fr !important;
-            gap: 1rem !important;
           }
           #booking-calendar-grid {
             grid-template-columns: repeat(4, 1fr) !important;
