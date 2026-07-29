@@ -269,7 +269,7 @@ export default function AuthModal({
           </div>
         )}
 
-        {errorMsg && (
+        {errorMsg && !errorMsg.toLowerCase().includes('failed to fetch') && (
           <div 
             style={{ 
               background: 'rgba(163, 29, 49, 0.1)', 
