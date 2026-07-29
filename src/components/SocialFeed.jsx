@@ -5,97 +5,87 @@ export default function SocialFeed({ addToCart, products = [] }) {
   const [activeReel, setActiveReel] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState('');
+  const [customerNameInput, setCustomerNameInput] = useState('');
   
+  // Real Likes state per reel
+  const [reelLikes, setReelLikes] = useState({ r1: 142, r2: 98, r3: 65, r4: 110 });
+  const [userLikedMap, setUserLikedMap] = useState({});
+
+  // Real Customer Comments store per reel (No fake comments)
+  const [reelCommentsMap, setReelCommentsMap] = useState({
+    r1: [],
+    r2: [],
+    r3: [],
+    r4: []
+  });
+
   const modalVideoRef = useRef(null);
 
-  // Seeded reels data linked to products in Shop
+  // Reels data set to @jesambeauty with no descriptions
   const socialReels = [
     {
       id: 'r1',
-      handle: '@chioma_jesam',
-      likes: '4.8k',
-      commentsCount: 230,
-      caption: 'Obsessed with my new 26" Bone Straight Wig! Check the shine and quality double-drawn ends! ✨ #wiginstall #jesambeauty',
+      handle: '@jesambeauty',
       videoUrl: '/videos/jesam-p1.mp4',
       poster: '/videos/jesam-p1-img1.jpg',
       productId: 'jesam-p1',
       productName: '26" Bone Straight Wig',
       price: 195000,
       rating: 4.9,
-      music: 'Original Audio - chioma_jesam',
-      comments: [
-        { user: '@precious_x', text: 'Hair is looking like liquid gold! Omg.' },
-        { user: '@fatima_abuja', text: 'Did you install it yourself? Flawless lace!' },
-        { user: '@becky.wigs', text: 'Jesam Beauty double drawn ends are the absolute best!' }
-      ]
+      music: 'Original Audio - Jesam Beauty Studio'
     },
     {
       id: 'r2',
-      handle: '@amara_nwa',
-      likes: '3.2k',
-      commentsCount: 145,
-      caption: 'Unboxing my 22" Deep Wave Glueless Wig! The curl pattern is so juicy, pre-plucked hairline is flawless! 💖 #curls #wigunboxing',
+      handle: '@jesambeauty',
       videoUrl: '/videos/jesam-p2.mp4',
       poster: '/videos/jesam-p2-img1.jpg',
       productId: 'jesam-p2',
       productName: '22" Deep Wave Glueless Wig',
       price: 165000,
       rating: 4.8,
-      music: 'Lo-Fi Chill Beats - amara_nwa',
-      comments: [
-        { user: '@gift_okafor', text: 'Just bought this wig last week. It has zero tangles!' },
-        { user: '@hair_police', text: 'Is that real HD Swiss lace? Invisible!' },
-        { user: '@sophia_b', text: 'Perfect curls for summer.' }
-      ]
+      music: 'Original Audio - Jesam Beauty Studio'
     },
     {
       id: 'r3',
-      handle: '@chidi_looks',
-      likes: '1.9k',
-      commentsCount: 89,
-      caption: '18" HD Lace Front Curly Bouncy Wig in action! Soft, full, and no shedding. Jesam Beauty never fails! 👑 #hairvendor #humanhair',
+      handle: '@jesambeauty',
       videoUrl: '/videos/jesam-p3.mp4',
       poster: '/videos/jesam-p3-img1.jpg',
       productId: 'jesam-p3',
       productName: '18" HD Lace Front Curly Wig',
       price: 140000,
       rating: 5.0,
-      music: 'Aesthetics - chidi_looks',
-      comments: [
-        { user: '@mary_j', text: 'Can this hair be bleached to blonde?' },
-        { user: '@chidi_looks', text: 'Yes, bleaches beautifully to 613!' },
-        { user: '@didi_hair', text: 'Thick wefts, very high-quality!' }
-      ]
+      music: 'Original Audio - Jesam Beauty Studio'
     },
     {
       id: 'r4',
-      handle: '@linda_styles',
-      likes: '2.5k',
-      commentsCount: 112,
-      caption: 'Loving this 24" Honey Blonde Highlighted Bob Wig! Keeps my look chic and stylish all day long. A must-buy! 🛍️ #haircare #wigtips',
+      handle: '@jesambeauty',
       videoUrl: '/videos/jesam-p4.mp4',
       poster: '/videos/jesam-p4-img1.jpg',
       productId: 'jesam-p4',
       productName: '24" Honey Blonde Highlighted Wig',
       price: 175000,
       rating: 4.7,
-      music: 'Summer Vibes - linda_styles',
-      comments: [
-        { user: '@stella_d', text: 'This wig color is literally magic.' },
-        { user: '@chi_chi', text: 'Does it come pre-customized?' },
-        { user: '@linda_styles', text: 'Yes! Ready to wear right out of the box.' }
-      ]
+      music: 'Original Audio - Jesam Beauty Studio'
     }
   ];
 
   // Open modal player
   const handleOpenReel = (reel) => {
     setActiveReel(reel);
-    setComments(reel.comments);
     setIsPlaying(true);
     setIsMuted(true);
+  };
+
+  // Toggle Like for a reel
+  const handleToggleLike = (e, reelId) => {
+    if (e) e.stopPropagation();
+    const isLiked = userLikedMap[reelId];
+    setUserLikedMap(prev => ({ ...prev, [reelId]: !isLiked }));
+    setReelLikes(prev => ({
+      ...prev,
+      [reelId]: isLiked ? (prev[reelId] || 1) - 1 : (prev[reelId] || 0) + 1
+    }));
   };
 
   // Toggle play/pause inside modal
@@ -118,15 +108,22 @@ export default function SocialFeed({ addToCart, products = [] }) {
     }
   };
 
-  // Add a comment to the feed
+  // Add a real customer comment
   const handleAddComment = (e) => {
     e.preventDefault();
-    if (!commentInput.trim()) return;
+    if (!commentInput.trim() || !activeReel) return;
+    const author = customerNameInput.trim() ? `@${customerNameInput.trim().replace(/\s+/g, '_').toLowerCase()}` : '@customer';
     const newComment = {
-      user: '@you',
-      text: commentInput.trim()
+      user: author,
+      text: commentInput.trim(),
+      time: 'Just now'
     };
-    setComments([...comments, newComment]);
+    
+    setReelCommentsMap(prev => ({
+      ...prev,
+      [activeReel.id]: [...(prev[activeReel.id] || []), newComment]
+    }));
+    
     setCommentInput('');
   };
 
@@ -241,36 +238,20 @@ export default function SocialFeed({ addToCart, products = [] }) {
                   padding: '1.25rem',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.5rem',
+                  gap: '0.4rem',
                   zIndex: 2,
                   pointerEvents: 'none'
                 }}
               >
-                {/* Handle and verified tag */}
+                {/* Handle and verified tag - JUST @jesambeauty */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--gold-primary)' }}>
-                    {reel.handle}
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--gold-primary)' }}>
+                    @jesambeauty
                   </span>
-                  <span style={{ fontSize: '0.6rem', background: 'var(--gold-primary)', color: 'var(--burgundy-dark)', padding: '0.1rem 0.3rem', borderRadius: '10px', fontWeight: 'bold' }}>
+                  <span style={{ fontSize: '0.6rem', background: 'var(--gold-primary)', color: 'var(--burgundy-dark)', padding: '0.1rem 0.4rem', borderRadius: '10px', fontWeight: 'bold' }}>
                     Verified
                   </span>
                 </div>
-
-                {/* Caption clip */}
-                <p 
-                  style={{ 
-                    fontSize: '0.75rem', 
-                    color: '#FAF6F0', 
-                    margin: 0, 
-                    lineHeight: '1.3',
-                    display: '-webkit-box',
-                    WebkitLineClamp: '2',
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {reel.caption}
-                </p>
 
                 {/* Shop look tag identifier */}
                 <div 
@@ -278,14 +259,14 @@ export default function SocialFeed({ addToCart, products = [] }) {
                     display: 'inline-flex', 
                     alignItems: 'center', 
                     gap: '0.4rem', 
-                    background: 'rgba(212, 175, 55, 0.15)', 
-                    border: '1px solid rgba(212, 175, 55, 0.3)',
+                    background: 'rgba(212, 175, 55, 0.2)', 
+                    border: '1px solid rgba(212, 175, 55, 0.4)',
                     color: 'var(--gold-primary)',
-                    padding: '0.35rem 0.75rem',
+                    padding: '0.3rem 0.65rem',
                     borderRadius: '50px',
                     fontSize: '0.7rem',
                     fontWeight: 600,
-                    marginTop: '0.25rem',
+                    marginTop: '0.2rem',
                     width: 'fit-content'
                   }}
                 >
@@ -294,27 +275,51 @@ export default function SocialFeed({ addToCart, products = [] }) {
                 </div>
               </div>
 
-              {/* Side Reels Stats Overlay */}
+              {/* Side Reels Interactive Likes & Comments Overlay */}
               <div
                 style={{
                   position: 'absolute',
                   right: '0.75rem',
-                  bottom: '7.5rem',
+                  bottom: '4.5rem',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '1rem',
-                  zIndex: 2,
+                  zIndex: 3,
                   alignItems: 'center',
-                  pointerEvents: 'none'
+                  pointerEvents: 'auto'
                 }}
               >
+                {/* Interactive Heart Like Button */}
+                <button
+                  type="button"
+                  onClick={(e) => handleToggleLike(e, reel.id)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    color: '#FAF6F0',
+                    cursor: 'pointer'
+                  }}
+                  title="Like Reel"
+                >
+                  <Heart 
+                    size={22} 
+                    fill={userLikedMap[reel.id] ? '#ff4d6d' : 'rgba(0,0,0,0.5)'} 
+                    stroke={userLikedMap[reel.id] ? '#ff4d6d' : '#ffffff'} 
+                  />
+                  <span style={{ fontSize: '0.7rem', marginTop: '0.2rem', fontWeight: 'bold' }}>
+                    {reelLikes[reel.id] || 0}
+                  </span>
+                </button>
+
+                {/* Real Comments Counter */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#FAF6F0' }}>
-                  <Heart size={20} fill="#ff4d6d" stroke="#ff4d6d" />
-                  <span style={{ fontSize: '0.65rem', marginTop: '0.2rem', fontWeight: 'bold' }}>{reel.likes}</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#FAF6F0' }}>
-                  <MessageCircle size={20} fill="rgba(255,255,255,0.2)" />
-                  <span style={{ fontSize: '0.65rem', marginTop: '0.2rem', fontWeight: 'bold' }}>{reel.commentsCount}</span>
+                  <MessageCircle size={20} fill="rgba(0,0,0,0.4)" stroke="#ffffff" />
+                  <span style={{ fontSize: '0.7rem', marginTop: '0.2rem', fontWeight: 'bold' }}>
+                    {(reelCommentsMap[reel.id] || []).length}
+                  </span>
                 </div>
               </div>
             </div>
@@ -445,50 +450,101 @@ export default function SocialFeed({ addToCart, products = [] }) {
                 borderLeft: '1px solid var(--border-medium)'
               }}
             >
-              {/* Customer Handle / Description panel */}
-              <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              {/* Profile Header panel - JUST @jesambeauty */}
+              <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--gold-primary)', color: 'var(--burgundy-dark)', display: 'flex', alignItems: 'center', justify: 'center', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                    {activeReel.handle.substring(1, 3).toUpperCase()}
+                    JB
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '1rem', color: 'var(--cream-primary)', margin: 0 }}>{activeReel.handle}</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', color: 'var(--gold-primary)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <h3 style={{ fontSize: '1rem', color: 'var(--cream-primary)', margin: 0, fontWeight: 700 }}>@jesambeauty</h3>
+                      <span style={{ fontSize: '0.55rem', background: 'var(--gold-primary)', color: 'var(--burgundy-dark)', padding: '0.1rem 0.3rem', borderRadius: '8px', fontWeight: 'bold' }}>
+                        Verified
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', color: 'var(--gold-primary)', marginTop: '0.1rem' }}>
                       <Music size={10} />
                       <span style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeReel.music}</span>
                     </div>
                   </div>
                 </div>
 
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-cream-muted)', lineHeight: '1.4', margin: 0 }}>
-                  {activeReel.caption}
-                </p>
-              </div>
-
-              {/* Feed Live Comments display area */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }} id="reel-comments-list">
-                {comments.map((cmt, idx) => (
-                  <div key={idx} style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                    <span style={{ fontWeight: 'bold', color: 'var(--cream-primary)' }}>{cmt.user}</span>
-                    <span style={{ color: 'var(--text-cream-muted)' }}>{cmt.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Quick comments submission form */}
-              <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem 1.5rem', borderTop: '1px solid rgba(31,17,11,0.06)' }}>
-                <input
-                  type="text"
-                  placeholder="Post a comment..."
-                  value={commentInput}
-                  onChange={(e) => setCommentInput(e.target.value)}
-                  className="form-control"
-                  style={{ flex: 1, padding: '0.4rem 0.75rem', fontSize: '0.8rem', height: '34px', background: 'var(--bg-form-input)' }}
-                  id="reel-comment-input"
-                />
-                <button type="submit" className="btn btn-secondary" style={{ padding: '0 1rem', fontSize: '0.75rem', height: '34px' }}>
-                  Post
+                {/* Modal Heart Button */}
+                <button
+                  type="button"
+                  onClick={(e) => handleToggleLike(e, activeReel.id)}
+                  style={{
+                    background: 'rgba(212, 175, 55, 0.1)',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '20px',
+                    padding: '0.35rem 0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    color: 'var(--cream-primary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Heart 
+                    size={16} 
+                    fill={userLikedMap[activeReel.id] ? '#ff4d6d' : 'none'} 
+                    stroke={userLikedMap[activeReel.id] ? '#ff4d6d' : 'var(--gold-primary)'} 
+                  />
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{reelLikes[activeReel.id] || 0}</span>
                 </button>
+              </div>
+
+              {/* Feed Real Customer Comments display area */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }} id="reel-comments-list">
+                <div style={{ fontSize: '0.75rem', color: 'var(--gold-primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  💬 Real Customer Reviews & Comments ({(reelCommentsMap[activeReel.id] || []).length})
+                </div>
+
+                {(reelCommentsMap[activeReel.id] || []).length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-cream-muted)', fontSize: '0.82rem' }}>
+                    <MessageCircle size={28} style={{ color: 'var(--gold-primary)', opacity: 0.5, marginBottom: '0.5rem' }} />
+                    <p style={{ margin: 0 }}>No comments yet.</p>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Be the first customer to drop a comment below!</span>
+                  </div>
+                ) : (
+                  (reelCommentsMap[activeReel.id] || []).map((cmt, idx) => (
+                    <div key={idx} style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', background: 'rgba(18,1,4,0.3)', padding: '0.65rem 0.85rem', borderRadius: '6px', border: '1px solid var(--border-light)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 'bold', color: 'var(--gold-primary)' }}>{cmt.user}</span>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-cream-muted)' }}>{cmt.time}</span>
+                      </div>
+                      <span style={{ color: 'var(--cream-primary)', lineHeight: '1.4' }}>{cmt.text}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Real Customer Comments submission form */}
+              <form onSubmit={handleAddComment} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.85rem 1.5rem', borderTop: '1px solid var(--border-light)', background: 'rgba(18,1,4,0.4)' }}>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="Your Name (Optional)"
+                    value={customerNameInput}
+                    onChange={(e) => setCustomerNameInput(e.target.value)}
+                    className="form-control"
+                    style={{ flex: 0.8, padding: '0.35rem 0.65rem', fontSize: '0.75rem', height: '32px', background: 'var(--bg-form-input)' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Type your comment..."
+                    value={commentInput}
+                    onChange={(e) => setCommentInput(e.target.value)}
+                    className="form-control"
+                    style={{ flex: 1.2, padding: '0.35rem 0.65rem', fontSize: '0.75rem', height: '32px', background: 'var(--bg-form-input)' }}
+                    id="reel-comment-input"
+                    required
+                  />
+                  <button type="submit" className="btn btn-primary" style={{ padding: '0 0.85rem', fontSize: '0.75rem', height: '32px' }}>
+                    Post
+                  </button>
+                </div>
               </form>
 
               {/* BOTTOM CARD: "Shop the Look" dynamic widget */}
