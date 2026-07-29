@@ -204,7 +204,7 @@ export default function Footer({ setActiveView, setAdminMode }) {
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 <Mail size={16} style={{ color: 'var(--gold-primary)', flexShrink: 0 }} />
-                <span>hello@jesambeauty.com</span>
+                <a href="mailto:beautybyjessam@gmail.com" style={{ color: 'var(--text-cream-muted)', textDecoration: 'none' }}>beautybyjessam@gmail.com</a>
               </div>
             </div>
           </div>

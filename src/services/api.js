@@ -141,6 +141,11 @@ const api = {
     return this.request(`/orders/${reference}`, 'PATCH', { status });
   },
 
+  // Contact Form Inquiry
+  async sendContactInquiry(contactData) {
+    return this.request('/contact', 'POST', contactData);
+  },
+
   // User Management (Admin Only)
   async getUsers() {
     return this.request('/auth/users', 'GET');

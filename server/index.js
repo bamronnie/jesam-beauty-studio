@@ -13,6 +13,7 @@ import productRoutes from './routes/products.js';
 import serviceRoutes from './routes/services.js';
 import bookingRoutes from './routes/bookings.js';
 import orderRoutes from './routes/orders.js';
+import contactRoutes from './routes/contact.js';
 
 // Load config
 dotenv.config();
@@ -56,6 +57,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Base route
 app.get('/', (req, res) => {

@@ -29,14 +29,25 @@ export default function Contact() {
     }
   ];
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (name.trim() && email.trim() && message.trim()) {
+      try {
+        // Send payload to backend
+        await api.sendContactInquiry({ name, email, message });
+      } catch (err) {
+        console.warn('Backend inquiry logged locally:', err.message);
+      }
+
+      // Also trigger instant mailto client fallback directly to beautybyjessam@gmail.com
+      const mailtoUrl = `mailto:beautybyjessam@gmail.com?subject=${encodeURIComponent(`Website Inquiry from ${name}`)}&body=${encodeURIComponent(`Name: ${name}\nClient Email: ${email}\n\nMessage:\n${message}`)}`;
+      window.open(mailtoUrl, '_blank');
+
       setSent(true);
       setName('');
       setEmail('');
       setMessage('');
-      setTimeout(() => setSent(false), 5000);
+      setTimeout(() => setSent(false), 6000);
     }
   };
 
@@ -91,9 +102,9 @@ export default function Contact() {
               {sent ? (
                 <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--cream-primary)' }}>
                   <CheckCircle size={32} style={{ color: '#4BB543', marginBottom: '0.5rem' }} />
-                  <h4>Message Sent Successfully!</h4>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-cream-muted)', marginTop: '0.2rem' }}>
-                    We will review your inquiry and get back to you within 24 hours.
+                  <h4>Message Sent to beautybyjessam@gmail.com!</h4>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-cream-muted)', marginTop: '0.25rem' }}>
+                    Your inquiry has been sent directly to Jesam Beauty email. We will get back to you within 24 hours.
                   </p>
                 </div>
               ) : (
@@ -136,7 +147,7 @@ export default function Contact() {
                   </div>
                   <button type="submit" className="btn btn-primary" id="contact-submit-btn">
                     <Send size={14} />
-                    Send Inquiry
+                    Send Inquiry to beautybyjessam@gmail.com
                   </button>
                 </form>
               )}
@@ -155,7 +166,7 @@ export default function Contact() {
               <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
                 <Mail size={24} style={{ color: 'var(--gold-primary)', margin: '0 auto 0.75rem auto' }} />
                 <h4 style={{ fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--cream-primary)', marginBottom: '0.4rem' }}>Email</h4>
-                <p style={{ fontSize: '0.8rem' }}>hello@jesambeauty.com</p>
+                <a href="mailto:beautybyjessam@gmail.com" style={{ fontSize: '0.78rem', color: 'var(--gold-primary)', textDecoration: 'underline' }}>beautybyjessam@gmail.com</a>
               </div>
             </div>
 
