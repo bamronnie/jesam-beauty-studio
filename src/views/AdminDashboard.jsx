@@ -2547,12 +2547,123 @@ export default function AdminDashboard({
               </div>
 
               <form onSubmit={handleSaveProductEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Product Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editProdName}
+                    onChange={(e) => setEditProdName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="grid-cols-2" style={{ gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Current Selling Price (₦)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={editProdPrice}
+                      onChange={(e) => setEditProdPrice(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Original / Strikethrough Price (₦)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="e.g. 220000"
+                      value={editProdOldPrice}
+                      onChange={(e) => setEditProdOldPrice(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid-cols-2" style={{ gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Category</label>
+                    <select
+                      className="form-control"
+                      value={editProdCategory}
+                      onChange={(e) => setEditProdCategory(e.target.value)}
+                    >
+                      <option value="wigs">Custom Wigs</option>
+                      <option value="extensions">Wefts & Bundles</option>
+                      <option value="care">Hair Care</option>
+                      <option value="tools">Styling Tools</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="form-label">Promo Tag Badge</label>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--gold-primary)' }}>Click to pick tag:</span>
+                    </div>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g. Best Seller, Glueless"
+                      value={editProdTag}
+                      onChange={(e) => setEditProdTag(e.target.value)}
+                    />
+                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
+                      {['Best Seller', 'Glueless', 'Hot Deal', 'Raw Hair', 'Ready to Wear', 'Limited Stock'].map(t => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setEditProdTag(t)}
+                          style={{
+                            background: editProdTag === t ? 'var(--gold-primary)' : 'rgba(212, 175, 55, 0.1)',
+                            color: editProdTag === t ? 'var(--burgundy-dark)' : 'var(--cream-primary)',
+                            border: '1px solid var(--border-light)',
+                            padding: '0.15rem 0.45rem',
+                            borderRadius: '3px',
+                            fontSize: '0.65rem',
+                            cursor: 'pointer',
+                            fontWeight: editProdTag === t ? 'bold' : 'normal'
+                          }}
+                        >
+                          🏷️ {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
                 <div className="form-group">
-                  <label className="form-label">Product Description</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <label className="form-label" style={{ margin: 0 }}>Product Description & Specifications</label>
+                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--gold-primary)', fontWeight: 600, alignSelf: 'center', marginRight: '0.2rem' }}>⚡ Auto-Fill:</span>
+                      <button
+                        type="button"
+                        onClick={() => setEditProdDesc('100% Raw Virgin Human Hair Wig Unit. Features HD Invisible Swiss Lace, pre-plucked natural hairline with bleached knots. 180% Density for maximum volume and silkiness.')}
+                        style={{ background: 'rgba(212, 175, 55, 0.1)', border: '1px solid var(--border-light)', color: 'var(--cream-primary)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', cursor: 'pointer' }}
+                      >
+                        Raw Wig Unit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditProdDesc('Premium Double Drawn Raw Hair Extensions. Tangle-free, cuticle-aligned from root to tip. Can be bleached to 613 Blonde and styled with hot tools up to 450°F.')}
+                        style={{ background: 'rgba(212, 175, 55, 0.1)', border: '1px solid var(--border-light)', color: 'var(--cream-primary)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', cursor: 'pointer' }}
+                      >
+                        Bundles / Extensions
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditProdDesc('Nourishing organic hair care serum formulated with argan & jojoba oils to protect raw hair bundles and wigs from heat while maintaining silky luster.')}
+                        style={{ background: 'rgba(212, 175, 55, 0.1)', border: '1px solid var(--border-light)', color: 'var(--cream-primary)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', cursor: 'pointer' }}
+                      >
+                        Hair Care
+                      </button>
+                    </div>
+                  </div>
                   <textarea
                     rows="4"
                     className="form-control"
+                    placeholder="Provide details on hair material, density, origins, or click an auto-fill preset..."
                     value={editProdDesc}
                     onChange={(e) => setEditProdDesc(e.target.value)}
                   />
