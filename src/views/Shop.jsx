@@ -513,7 +513,12 @@ export default function Shop({
               onMouseLeave={() => setHoveredProductId(null)}
             >
               {/* PIP Image & Video Box */}
-              <div className="pip-card-image-container">
+              <div 
+                className="pip-card-image-container" 
+                onClick={() => setSelectedProduct(prod)} 
+                style={{ cursor: 'pointer' }}
+                title="Click to view product details"
+              >
                 <img 
                   src={prod.img} 
                   alt={prod.name} 
@@ -603,7 +608,11 @@ export default function Shop({
 
               {/* Title & Info */}
               <div>
-                <h3 style={{ fontSize: '1.1rem', color: 'var(--cream-primary)', marginBottom: '0.5rem', minHeight: '44px' }}>
+                <h3 
+                  onClick={() => setSelectedProduct(prod)}
+                  style={{ fontSize: '1.1rem', color: 'var(--cream-primary)', marginBottom: '0.5rem', minHeight: '44px', cursor: 'pointer' }}
+                  title="Click to view details"
+                >
                   {prod.name}
                 </h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>

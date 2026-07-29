@@ -318,7 +318,12 @@ export default function Hero({ setActiveView, addToCart, products = [] }) {
                 onMouseLeave={() => setHoveredProductId(null)}
               >
                 {/* PIP Image & Video Box */}
-                <div className="pip-card-image-container" style={{ height: '240px' }}>
+                <div 
+                  className="pip-card-image-container" 
+                  onClick={() => setSelectedProduct(prod)}
+                  style={{ height: '240px', cursor: 'pointer' }}
+                  title="Click to view product details"
+                >
                   <img 
                     src={prod.img} 
                     alt={prod.name} 
@@ -402,7 +407,11 @@ export default function Hero({ setActiveView, addToCart, products = [] }) {
 
                 {/* Info */}
                 <div>
-                  <h4 style={{ fontSize: '0.95rem', color: 'var(--cream-primary)', marginBottom: '0.4rem', minHeight: '38px', lineHeight: '1.3' }}>
+                  <h4 
+                    onClick={() => setSelectedProduct(prod)}
+                    style={{ fontSize: '0.95rem', color: 'var(--cream-primary)', marginBottom: '0.4rem', minHeight: '38px', lineHeight: '1.3', cursor: 'pointer' }}
+                    title="Click to view details"
+                  >
                     {prod.name}
                   </h4>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}>
