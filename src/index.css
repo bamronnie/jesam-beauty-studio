@@ -1105,4 +1105,129 @@ select.form-control {
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
 }
 
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVE ESSENTIALS (< 768px & < 480px)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.25rem !important;
+  }
+
+  .container {
+    padding: 0 1.25rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hero & Headings adjustments */
+  h1 {
+    font-size: 2.5rem !important;
+    line-height: 1.2 !important;
+  }
+  .section-title {
+    font-size: 1.8rem !important;
+  }
+  .section-header {
+    margin-bottom: 2rem !important;
+  }
+  
+  /* Category Quick Circles Touch Carousel on Mobile */
+  #category-circles-list {
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 0.75rem !important;
+    padding-left: 0.5rem !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+
+  .category-circle-item {
+    flex-shrink: 0 !important;
+    scroll-snap-align: start;
+    width: 95px !important;
+  }
+
+  /* Product Catalog Grid: 2 Columns on Mobile */
+  .product-grid, #shop-products-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .glass-card {
+    padding: 0.85rem !important;
+  }
+
+  .pip-card-image-container {
+    height: 200px !important;
+  }
+
+  .pip-video-badge {
+    width: 68px !important;
+    height: 85px !important;
+    bottom: 0.4rem !important;
+    right: 0.4rem !important;
+  }
+
+  /* Quickview Details Modal on Mobile */
+  .quickview-modal {
+    max-height: 92vh !important;
+    width: 95% !important;
+    padding: 1.25rem !important;
+    overflow-y: auto !important;
+  }
+
+  .quickview-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .quickview-viewport {
+    height: 300px !important;
+  }
+
+  /* Social Reels Modal on Mobile */
+  #social-reel-modal .modal-content {
+    grid-template-columns: 1fr !important;
+    height: 92vh !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+  }
+
+  /* WhatsApp Widget Mobile positioning */
+  #whatsapp-widget-container {
+    bottom: 1.25rem !important;
+    right: 1.25rem !important;
+  }
+
+  #whatsapp-chat-popup {
+    width: calc(100vw - 2.5rem) !important;
+    right: 0 !important;
+  }
+
+  /* Shop filter toolbar on Mobile */
+  #shop-filters-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+  }
+
+  /* Navigation Bar Top Offset */
+  #hero-section {
+    padding-top: 8rem !important;
+    min-height: 65vh !important;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2.1rem !important;
+  }
+  .pip-card-image-container {
+    height: 180px !important;
+  }
+}
+
+
 
