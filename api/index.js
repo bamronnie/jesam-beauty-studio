@@ -17,6 +17,11 @@ import contactRoutes from '../server/routes/contact.js';
 
 dotenv.config();
 
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://admin:Bam08089646456.@cluster0.ns3s0ug.mongodb.net/jesam_beauty?retryWrites=true&w=majority';
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'slay_hair_studio_super_secret_jwt_token_key_123!@#';
+}
+
 const app = express();
 
 app.use(cors({ origin: '*' }));
@@ -27,17 +32,15 @@ let isConnected = false;
 async function connectDb() {
   if (isConnected) return;
   try {
-    if (process.env.MONGODB_URI) {
-      await mongoose.connect(process.env.MONGODB_URI);
-      global.isDbConnected = true;
-      isConnected = true;
-      await seedDatabase();
-      await ensureDefaultAdmin();
-    } else {
-      global.isDbConnected = false;
-    }
+    console.log('🔌 Connecting to MongoDB Atlas Cloud Database...');
+    await mongoose.connect(MONGODB_URI);
+    global.isDbConnected = true;
+    isConnected = true;
+    console.log('✅ Connected to MongoDB Atlas Cloud Database!');
+    await seedDatabase();
+    await ensureDefaultAdmin();
   } catch (err) {
-    console.warn('MongoDB connection warning:', err.message);
+    console.error('❌ MongoDB Atlas connection error:', err.message);
     global.isDbConnected = false;
   }
 }
