@@ -32,17 +32,15 @@ const api = {
         localStorage.removeItem('jesam_current_user');
       }
 
-      // Read response text safely to avoid Unexpected end of JSON input errors
-      const text = await response.text();
-      let data = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch {
-        data = { message: text };
-      }
+      // Check if there is content to parse
+      const contentType = response.headers.get("content-type");
+      const isJson = contentType && contentType.includes("application/json");
+      const data = (isJson && response.status !== 204) ? await response.json() : null;
 
       if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
+        const errorMsg = data?.message || response.statusText || 'API request failed';
+        console.warn(`API Warning on ${method} ${url}:`, errorMsg);
+        throw new Error(errorMsg);
       }
       return data;
     } catch (error) {
