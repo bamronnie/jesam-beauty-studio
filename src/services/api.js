@@ -32,13 +32,21 @@ const api = {
         localStorage.removeItem('jesam_current_user');
       }
 
-      const data = await response.json();
+      // Read response text safely to avoid Unexpected end of JSON input errors
+      const text = await response.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { message: text };
+      }
+
       if (!response.ok) {
         throw new Error(data.message || 'API request failed');
       }
       return data;
     } catch (error) {
-      console.warn(`API request to ${endpoint} unreachable. Using client session fallback...`);
+      console.warn(`API request to ${endpoint} warning:`, error.message);
       if (endpoint.includes('/login') || endpoint.includes('/register') || endpoint.includes('/google')) {
         const email = body?.email ? body.email.toLowerCase() : 'client@jesambeauty.com';
         const isAdmin = email === 'admin@jesambeauty.com';
