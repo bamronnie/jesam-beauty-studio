@@ -1023,3 +1023,86 @@ select.form-control {
   transform: translateY(-1px);
 }
 
+/* Picture-in-Picture Video Card UI */
+.pip-card-image-container {
+  height: 290px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  background: var(--burgundy-dark);
+  margin-bottom: 1rem;
+}
+
+.pip-main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover .pip-main-img {
+  transform: scale(1.04);
+}
+
+.pip-video-badge {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  width: 95px;
+  height: 115px;
+  border-radius: 10px;
+  border: 2px solid var(--gold-primary);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  background: #000;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 5;
+}
+
+.glass-card:hover .pip-video-badge {
+  transform: scale(1.12) translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4);
+  border-color: #fff;
+}
+
+.pip-video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pip-play-tag {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(18, 1, 4, 0.85);
+  color: var(--gold-primary);
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  z-index: 6;
+}
+
+.pip-play-icon-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  animation: pulseRed 1.5s infinite;
+}
+
+@keyframes pulseRed {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 77, 77, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+}
+
+

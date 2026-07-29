@@ -447,6 +447,25 @@ export default function AdminDashboard({
     }
   };
 
+  const handleClearAllProducts = async () => {
+    if (!window.confirm('Are you sure you want to clear ALL products? This gives you a clean slate to upload your client\'s real products.')) return;
+    try {
+      for (const p of products) {
+        await api.deleteProduct(p._id || p.id).catch(() => {});
+      }
+      setProducts([]);
+      showNotification('All sample products cleared! Catalog is now ready for your client\'s items.', 'success');
+    } catch (err) {
+      showNotification('Error clearing products: ' + err.message, 'error');
+    }
+  };
+
+  const handleGenerateDescription = (texture = 'Bone Straight', length = '24"', lace = '13x4 HD Frontal', density = '180%') => {
+    const desc = `100% Raw Virgin Human Hair ${texture} (${length}). Features ${lace} with pre-plucked natural hairline and pre-bleached knots. ${density} density with double-drawn full ends. Can be dyed, ceramic pressed up to 450°F, and washed effortlessly.`;
+    setNewProdDesc(desc);
+    showNotification('Accurate hair description generated!', 'info');
+  };
+
   return (
     <section 
       style={{
@@ -1238,20 +1257,43 @@ export default function AdminDashboard({
                     )}
                   </button>
                 </div>
-                <button 
-                  onClick={() => exportToCSV(
-                    products, 
-                    `catalog_products_${Date.now()}.csv`,
-                    ['name', 'price', 'oldPrice', 'category', 'tag', 'img', 'images', 'desc'],
-                    p => [p.name, p.price, p.oldPrice || 0, p.category, p.tag || '', p.img, p.images && p.images.length > 0 ? p.images.join(';') : p.img, p.desc]
-                  )}
-                  type="button"
-                  className="btn btn-secondary"
-                  style={{ padding: '0.45rem 0.85rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}
-                >
-                  <FileText size={13} />
-                  Export Inventory (CSV)
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button 
+                    onClick={handleClearAllProducts}
+                    type="button"
+                    style={{ 
+                      background: 'rgba(255, 77, 77, 0.15)',
+                      border: '1px solid #ff4d4d',
+                      color: '#ff4d4d',
+                      padding: '0.45rem 0.85rem',
+                      fontSize: '0.75rem',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                    title="Clear sample items to start fresh with your client's real products"
+                  >
+                    <Trash2 size={13} />
+                    Clear All Old Sample Items
+                  </button>
+                  <button 
+                    onClick={() => exportToCSV(
+                      products, 
+                      `catalog_products_${Date.now()}.csv`,
+                      ['name', 'price', 'oldPrice', 'category', 'tag', 'img', 'images', 'desc'],
+                      p => [p.name, p.price, p.oldPrice || 0, p.category, p.tag || '', p.img, p.images && p.images.length > 0 ? p.images.join(';') : p.img, p.desc]
+                    )}
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '0.45rem 0.85rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}
+                  >
+                    <FileText size={13} />
+                    Export Inventory (CSV)
+                  </button>
+                </div>
               </div>
 
               {productEntryMode === 'single' ? (
@@ -1592,11 +1634,44 @@ export default function AdminDashboard({
                       </div>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Description</label>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <label className="form-label" style={{ margin: 0 }}>Description</label>
+                        <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--gold-primary)', fontWeight: 600, alignSelf: 'center', marginRight: '0.2rem' }}>⚡ Auto-Fill:</span>
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateDescription('Bone Straight Wig', '24"', '13x4 HD Frontal', '180%')}
+                            style={{ background: 'rgba(212, 175, 55, 0.1)', border: '1px solid var(--border-light)', color: 'var(--cream-primary)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', cursor: 'pointer' }}
+                          >
+                            Bone Straight
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateDescription('Deep Wave Glueless Wig', '22"', '5x5 Closure', '180%')}
+                            style={{ background: 'rgba(212, 175, 55, 0.1)', border: '1px solid var(--border-light)', color: 'var(--cream-primary)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', cursor: 'pointer' }}
+                          >
+                            Deep Wave
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateDescription('Raw Hair Bundles (3 Packs)', '20"', 'Weft Extensions', 'Full Density')}
+                            style={{ background: 'rgba(212, 175, 55, 0.1)', border: '1px solid var(--border-light)', color: 'var(--cream-primary)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', cursor: 'pointer' }}
+                          >
+                            Raw Bundles
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setNewProdDesc('Nourishing, sulfate-free organic hair care serum formulated with argan & jojoba oils to protect raw hair bundles and wigs from heat up to 450°F while maintaining silky luster.')}
+                            style={{ background: 'rgba(212, 175, 55, 0.1)', border: '1px solid var(--border-light)', color: 'var(--cream-primary)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', cursor: 'pointer' }}
+                          >
+                            Care Serum
+                          </button>
+                        </div>
+                      </div>
                       <textarea
                         rows="3"
                         className="form-control"
-                        placeholder="Provide details on hair material, density, origins..."
+                        placeholder="Provide details on hair material, density, origins or click an auto-fill preset..."
                         value={newProdDesc}
                         onChange={(e) => setNewProdDesc(e.target.value)}
                       />

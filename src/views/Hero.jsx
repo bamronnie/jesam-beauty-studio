@@ -317,29 +317,45 @@ export default function Hero({ setActiveView, addToCart, products = [] }) {
                 onMouseEnter={() => setHoveredProductId(prod._id || prod.id)}
                 onMouseLeave={() => setHoveredProductId(null)}
               >
-                {/* Image */}
-                <div 
-                  style={{ 
-                    height: '200px', 
-                    borderRadius: '6px', 
-                    overflow: 'hidden', 
-                    position: 'relative',
-                    border: '1px solid rgba(212, 175, 55, 0.08)',
-                    background: 'var(--burgundy-dark)',
-                    marginBottom: '1rem'
-                  }}
-                >
-                  {hoveredProductId === (prod._id || prod.id) ? (
-                    <video
-                      src={prod.video || '/8431525-uhd_4096_2160_25fps.mp4'}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <img src={prod.img} alt={prod.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {/* PIP Image & Video Box */}
+                <div className="pip-card-image-container" style={{ height: '240px' }}>
+                  <img 
+                    src={prod.img} 
+                    alt={prod.name} 
+                    className="pip-main-img"
+                  />
+
+                  {/* Picture-in-Picture Video Preview Box */}
+                  {prod.video && (
+                    <div className="pip-video-badge" style={{ width: '80px', height: '95px' }}>
+                      {hoveredProductId === (prod._id || prod.id) ? (
+                        <>
+                          <div className="pip-play-tag" style={{ fontSize: '0.5rem', padding: '0.1rem 0.3rem' }}>
+                            <span className="pip-play-icon-pulse"></span> PLAY
+                          </div>
+                          <video
+                            src={prod.video}
+                            poster={prod.poster || prod.img}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="pip-video-player"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <div className="pip-play-tag" style={{ fontSize: '0.5rem', padding: '0.1rem 0.3rem' }}>
+                            <Play size={8} style={{ fill: 'currentColor' }} /> VIDEO
+                          </div>
+                          <img
+                            src={prod.poster || prod.img}
+                            alt="Video Preview"
+                            className="pip-video-player"
+                          />
+                        </>
+                      )}
+                    </div>
                   )}
                   
                   {prod.tag && (
