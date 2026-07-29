@@ -20,70 +20,7 @@ export default function Hero({ setActiveView, addToCart, products = [] }) {
   };
 
   // Get best seller wig items (filtering products passed from App.jsx)
-  const displayCatalog = (products && Array.isArray(products) && products.length > 0) ? products : [
-    {
-      id: 'jesam-p1',
-      name: '26" Bone Straight HD Lace Wig',
-      price: 195000,
-      oldPrice: 220000,
-      category: 'wigs',
-      tag: 'Best Seller',
-      img: '/videos/jesam-p1-img1.jpg',
-      poster: '/videos/jesam-p1-img1.jpg',
-      images: ['/videos/jesam-p1-img1.jpg', '/videos/jesam-p1-img2.jpg', '/videos/jesam-p1-img3.jpg', '/videos/jesam-p1-img4.jpg', '/videos/jesam-p1-poster.jpg'],
-      video: '/videos/jesam-p1.mp4',
-      desc: '100% Raw Virgin Human Hair bone straight wig with customized 13x4 HD Swiss Lace.',
-      rating: 4.8,
-      reviews: 12
-    },
-    {
-      id: 'jesam-p2',
-      name: '22" Deep Wave Glueless Wear & Go Wig',
-      price: 165000,
-      oldPrice: 185000,
-      category: 'wigs',
-      tag: 'Glueless',
-      img: '/videos/jesam-p2-img1.jpg',
-      poster: '/videos/jesam-p2-img1.jpg',
-      images: ['/videos/jesam-p2-img1.jpg', '/videos/jesam-p2-img2.jpg', '/videos/jesam-p2-img3.jpg', '/videos/jesam-p2-img4.jpg', '/videos/jesam-p2-poster.jpg'],
-      video: '/videos/jesam-p2.mp4',
-      desc: 'High density deep wave texture wig with pre-cut HD lace foundation.',
-      rating: 4.9,
-      reviews: 15
-    },
-    {
-      id: 'jesam-p3',
-      name: '18" HD Lace Front Curly Bouncy Wig',
-      price: 140000,
-      oldPrice: 160000,
-      category: 'wigs',
-      tag: 'New Arrival',
-      img: '/videos/jesam-p3-img1.jpg',
-      poster: '/videos/jesam-p3-img1.jpg',
-      images: ['/videos/jesam-p3-img1.jpg', '/videos/jesam-p3-img2.jpg', '/videos/jesam-p3-img3.jpg', '/videos/jesam-p3-img4.jpg', '/videos/jesam-p3-poster.jpg'],
-      video: '/videos/jesam-p3.mp4',
-      desc: 'Pre-plucked HD Swiss Lace front wig in bouncy natural curls.',
-      rating: 5.0,
-      reviews: 18
-    },
-    {
-      id: 'jesam-p4',
-      name: '24" Honey Blonde Highlighted Bob Wig',
-      price: 175000,
-      oldPrice: 195000,
-      category: 'wigs',
-      tag: 'Custom Color',
-      img: '/videos/jesam-p4-img1.jpg',
-      poster: '/videos/jesam-p4-img1.jpg',
-      images: ['/videos/jesam-p4-img1.jpg', '/videos/jesam-p4-img2.jpg', '/videos/jesam-p4-img3.jpg', '/videos/jesam-p4-img4.jpg', '/videos/jesam-p4-poster.jpg'],
-      video: '/videos/jesam-p4.mp4',
-      desc: 'Custom honey blonde multi-tonal highlighted wig with dark root depth.',
-      rating: 4.8,
-      reviews: 21
-    }
-  ];
-
-  const bestSellers = displayCatalog.filter(p => p.category === 'wigs' || p.category === 'extensions').slice(0, 4);
+  const bestSellers = products.filter(p => p.category === 'wigs' || p.category === 'extensions').slice(0, 4);
 
   return (
     <div style={{ background: 'var(--burgundy-dark)', overflow: 'hidden' }}>

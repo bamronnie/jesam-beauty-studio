@@ -76,80 +76,47 @@ export default function AuthModal({
     }
   };
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const timer = setTimeout(() => {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+      if (clientId && window.google) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleCredentialResponse
+          });
+          window.google.accounts.id.renderButton(
+            document.getElementById("google-signin-btn-container"),
+            { theme: "outline", size: "large", width: "100%", text: "continue_with" }
+          );
+        } catch (e) {
+          console.warn("Failed to render standard Google button:", e);
+        }
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [isOpen, handleGoogleCredentialResponse]);
+
   if (!isOpen) return null;
 
   const handleLogin = async (e) => {
-    if (e) e.preventDefault();
+    e.preventDefault();
     setErrorMsg('');
-
-    const email = loginEmail.trim();
-    const password = loginPassword.trim();
-
-    if (!email || !password) {
-      setErrorMsg('Please enter both email and password.');
-      return;
-    }
     
     try {
-      const data = await api.login(email, password);
-      if (data && data.user) {
-        setCurrentUser(data.user);
-        setSuccessMsg(`Welcome back, ${data.user.name}!`);
-        setTimeout(() => {
-          setSuccessMsg('');
-          setLoginEmail('');
-          setLoginPassword('');
-          onClose();
-        }, 1200);
-        return;
-      }
+      const data = await api.login(loginEmail, loginPassword);
+      setCurrentUser(data.user);
+      setSuccessMsg(`Welcome back, ${data.user.name}!`);
+      setTimeout(() => {
+        setSuccessMsg('');
+        setLoginEmail('');
+        setLoginPassword('');
+        onClose();
+      }, 1500);
     } catch (err) {
-      console.warn('API login call failed, triggering instant client fallback:', err);
+      setErrorMsg(err.message || 'Incorrect email or password. Please try again.');
     }
-
-    // Direct Guaranteed Client Fallback
-    const isAdmin = email.toLowerCase() === 'admin@jesambeauty.com' && password === 'admin123';
-    const fallbackUser = {
-      _id: isAdmin ? 'admin-1' : 'user-' + Date.now(),
-      name: isAdmin ? 'Jesam Studio Admin' : (email.split('@')[0] || 'Customer'),
-      email: email.toLowerCase(),
-      role: isAdmin ? 'admin' : 'customer',
-      loyaltyPoints: isAdmin ? 500 : 100
-    };
-
-    localStorage.setItem('jesam_token', 'mock-token-' + Date.now());
-    localStorage.setItem('jesam_current_user', JSON.stringify(fallbackUser));
-    setCurrentUser(fallbackUser);
-    setSuccessMsg(isAdmin ? 'Admin Sign-In Successful! Redirecting to Admin Dashboard...' : `Welcome back, ${fallbackUser.name}!`);
-
-    setTimeout(() => {
-      setSuccessMsg('');
-      setLoginEmail('');
-      setLoginPassword('');
-      onClose();
-    }, 1200);
-  };
-
-  const triggerQuickAdminLogin = () => {
-    setLoginEmail('admin@jesambeauty.com');
-    setLoginPassword('admin123');
-    const adminUser = {
-      _id: 'admin-1',
-      name: 'Jesam Studio Admin',
-      email: 'admin@jesambeauty.com',
-      role: 'admin',
-      loyaltyPoints: 500
-    };
-    localStorage.setItem('jesam_token', 'mock-admin-token-123');
-    localStorage.setItem('jesam_current_user', JSON.stringify(adminUser));
-    setCurrentUser(adminUser);
-    setSuccessMsg('⚡ Logged in as Jesam Admin!');
-    setTimeout(() => {
-      setSuccessMsg('');
-      setLoginEmail('');
-      setLoginPassword('');
-      onClose();
-    }, 1000);
   };
 
   const handleRegister = async (e) => {
@@ -247,7 +214,7 @@ export default function AuthModal({
           </div>
         )}
 
-        {errorMsg && !errorMsg.toLowerCase().includes('failed to fetch') && (
+        {errorMsg && (
           <div 
             style={{ 
               background: 'rgba(163, 29, 49, 0.1)', 
@@ -320,9 +287,9 @@ export default function AuthModal({
               /* LOGIN FORM */
               <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} id="login-form">
                 <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
-                  <h3 style={{ fontSize: '1.5rem', color: 'var(--cream-primary)' }}>Sign In to Jesam Beauty</h3>
+                  <h3 style={{ fontSize: '1.5rem', color: 'var(--cream-primary)' }}>Welcome back to Jesam Beauty</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-cream-muted)' }}>
-                    Enter your email address and password to access your account.
+                    Enter credentials to view VIP loyalty points & order history.
                   </p>
                 </div>
 
@@ -335,7 +302,7 @@ export default function AuthModal({
                       className="form-control"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="e.g. client@example.com"
+                      placeholder="e.g. customer@jesambeauty.com"
                       required
                       style={{ paddingLeft: '2.75rem', width: '100%' }}
                       id="login-email-input"
@@ -360,17 +327,32 @@ export default function AuthModal({
                   </div>
                 </div>
 
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }} id="login-submit-btn">
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} id="login-submit-btn">
                   Sign In
                 </button>
+
+                <div 
+                  style={{ 
+                    marginTop: '1rem', 
+                    padding: '0.75rem', 
+                    background: 'rgba(212, 175, 55, 0.05)', 
+                    border: '1px dashed var(--gold-primary)', 
+                    borderRadius: '4px',
+                    fontSize: '0.8rem',
+                    textAlign: 'center'
+                  }}
+                >
+                  <strong>Demo Credentials:</strong><br />
+                  Email: <span style={{ color: 'var(--gold-primary)' }}>customer@jesambeauty.com</span> | Password: <span style={{ color: 'var(--gold-primary)' }}>password123</span>
+                </div>
               </form>
             ) : (
               /* REGISTRATION FORM */
               <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} id="register-form">
                 <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
-                  <h3 style={{ fontSize: '1.5rem', color: 'var(--cream-primary)' }}>Create an Account</h3>
+                  <h3 style={{ fontSize: '1.5rem', color: 'var(--cream-primary)' }}>Join the Jesam VIP Club</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-cream-muted)' }}>
-                    Sign up to manage your salon appointments and track orders.
+                    Get 100 free welcome points and unlock private styling discounts instantly.
                   </p>
                 </div>
 

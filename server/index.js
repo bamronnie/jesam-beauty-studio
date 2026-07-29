@@ -21,9 +21,13 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware - Allow all origins for seamless Vercel production frontend communication
+// Middleware
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+
 app.use(cors({
-  origin: true,
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -32,14 +36,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Database connection
 global.isDbConnected = false;
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://admin:Bam08089646456.@cluster0.ns3s0ug.mongodb.net/jesam_beauty?retryWrites=true&w=majority';
-if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = 'slay_hair_studio_super_secret_jwt_token_key_123!@#';
-}
-
-mongoose.connect(MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI)
   .then(async () => {
-    console.log('🔌 Connected to MongoDB Atlas successfully.');
+    console.log('🔌 Connected to MongoDB successfully.');
     global.isDbConnected = true;
     
     // Seed default data & verify admin user

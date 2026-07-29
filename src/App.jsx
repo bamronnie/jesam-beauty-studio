@@ -203,7 +203,7 @@ export default function App() {
   const [shopSearchTerm, setShopSearchTerm] = useState('');
 
   // E-commerce items & Service list (Persisted database state)
-  const [products, setProducts] = useState(defaultProducts);
+  const [products, setProducts] = useState([]);
   const [services, setServices] = useState([]);
 
   // Client reviews state
@@ -257,11 +257,9 @@ export default function App() {
     const fetchCatalog = async () => {
       try {
         const prodData = await api.getProducts();
-        if (prodData && Array.isArray(prodData) && prodData.length > 0) {
-          setProducts(prodData);
-        }
+        setProducts(prodData);
       } catch (err) {
-        console.warn('Error fetching products from server:', err);
+        console.error('Error fetching products from server:', err);
       }
 
       try {

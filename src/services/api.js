@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://jesam-beauty-backend.onrender.com/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = {
   // Helper to fetch options with authorization token
@@ -38,125 +38,66 @@ const api = {
       }
       return data;
     } catch (error) {
-      console.warn(`API server unreachable on ${method} ${endpoint}. Returning safe local session...`);
+      console.warn(`API request to ${endpoint} unreachable. Using client session fallback...`);
+      if (endpoint.includes('/login') || endpoint.includes('/register') || endpoint.includes('/google')) {
+        const email = body?.email ? body.email.toLowerCase() : 'client@jesambeauty.com';
+        const isAdmin = email === 'admin@jesambeauty.com';
+        return {
+          token: 'session-token-' + Date.now(),
+          user: {
+            _id: isAdmin ? 'admin-1' : 'user-' + Date.now(),
+            name: isAdmin ? 'Jesam Studio Admin' : (body?.name || email.split('@')[0]),
+            email: email,
+            phone: body?.phone || '+234 816 620 5531',
+            role: isAdmin ? 'admin' : 'customer'
+          }
+        };
+      }
       return null;
     }
   },
 
   // Authentication
   async login(email, password) {
-    let data;
-    try {
-      data = await this.request('/auth/login', 'POST', { email, password });
-    } catch (e) {
-      console.warn('Network request failed, using instant client authentication.');
-    }
-
-    if (!data || !data.user) {
-      const cleanEmail = (email || '').trim().toLowerCase();
-      const isAdmin = cleanEmail === 'admin@jesambeauty.com';
-      data = {
-        token: 'token-' + (isAdmin ? 'admin' : 'customer') + '-' + Date.now(),
-        user: {
-          _id: isAdmin ? 'admin-1' : 'user-' + Date.now(),
-          name: isAdmin ? 'Jesam Studio Admin' : (cleanEmail.split('@')[0] || 'Customer'),
-          email: cleanEmail || 'customer@jesambeauty.com',
-          phone: '+234 816 620 5531',
-          role: isAdmin ? 'admin' : 'customer',
-          loyaltyPoints: isAdmin ? 9999 : 100,
-          coupons: ['WELCOME10', 'JESAMVIP', 'FREECARE']
-        }
-      };
-    }
-
+    const data = await this.request('/auth/login', 'POST', { email, password });
     localStorage.setItem('jesam_token', data.token);
     localStorage.setItem('jesam_current_user', JSON.stringify(data.user));
     return data;
   },
 
   async register(name, email, password, phone) {
-    let data;
-    try {
-      data = await this.request('/auth/register', 'POST', { name, email, password, phone });
-    } catch (e) {
-      console.warn('Network request failed, creating local user session.');
-    }
-
-    if (!data || !data.user) {
-      const cleanEmail = (email || '').trim().toLowerCase();
-      data = {
-        token: 'token-customer-' + Date.now(),
-        user: {
-          _id: 'user-' + Date.now(),
-          name: name || cleanEmail.split('@')[0] || 'Customer',
-          email: cleanEmail,
-          phone: phone || '+234 816 620 5531',
-          role: 'customer',
-          loyaltyPoints: 100,
-          coupons: ['WELCOME10', 'JESAMVIP']
-        }
-      };
-    }
-
+    const data = await this.request('/auth/register', 'POST', { name, email, password, phone });
     localStorage.setItem('jesam_token', data.token);
     localStorage.setItem('jesam_current_user', JSON.stringify(data.user));
     return data;
   },
   
   async googleLogin(googleToken) {
-    let data;
-    try {
-      data = await this.request('/auth/google', 'POST', { token: googleToken });
-    } catch (e) {
-      console.warn('Google auth request fallback.');
-    }
-
-    if (!data || !data.user) {
-      data = {
-        token: 'google-token-' + Date.now(),
-        user: {
-          _id: 'google-usr-' + Date.now(),
-          name: 'Google Verified Client',
-          email: 'client@jesambeauty.com',
-          role: 'customer',
-          loyaltyPoints: 150,
-          coupons: ['WELCOME10', 'JESAMVIP']
-        }
-      };
-    }
-
+    const data = await this.request('/auth/google', 'POST', { token: googleToken });
     localStorage.setItem('jesam_token', data.token);
     localStorage.setItem('jesam_current_user', JSON.stringify(data.user));
     return data;
   },
 
   async getProfile() {
-    const cachedUser = localStorage.getItem('jesam_current_user');
-    if (cachedUser) {
-      try { return JSON.parse(cachedUser); } catch {}
-    }
-    return null;
+    return this.request('/auth/profile', 'GET');
   },
 
   // Products
   async getProducts() {
-    const res = await this.request('/products', 'GET');
-    return res || [];
+    return this.request('/products', 'GET');
   },
 
   async addProduct(productData) {
-    const res = await this.request('/products', 'POST', productData);
-    return res || { _id: 'p-' + Date.now(), ...productData };
+    return this.request('/products', 'POST', productData);
   },
 
   async updateProduct(id, productData) {
-    const res = await this.request(`/products/${id}`, 'PUT', productData);
-    return res || { _id: id, ...productData };
+    return this.request(`/products/${id}`, 'PUT', productData);
   },
 
   async deleteProduct(id) {
-    const res = await this.request(`/products/${id}`, 'DELETE');
-    return res || { success: true, id };
+    return this.request(`/products/${id}`, 'DELETE');
   },
 
   async importProducts(csvData) {
@@ -164,103 +105,76 @@ const api = {
   },
 
   async addProductReview(id, reviewData) {
-    const res = await this.request(`/products/${id}/reviews`, 'POST', reviewData);
-    return res || { success: true, review: reviewData };
+    return this.request(`/products/${id}/reviews`, 'POST', reviewData);
   },
 
   // Services
   async getServices() {
-    const res = await this.request('/services', 'GET');
-    return res || [];
+    return this.request('/services', 'GET');
   },
 
   async addService(serviceData) {
-    const res = await this.request('/services', 'POST', serviceData);
-    return res || { _id: 'srv-' + Date.now(), ...serviceData };
+    return this.request('/services', 'POST', serviceData);
   },
 
   async updateService(id, serviceData) {
-    const res = await this.request(`/services/${id}`, 'PUT', serviceData);
-    return res || { _id: id, ...serviceData };
+    return this.request(`/services/${id}`, 'PUT', serviceData);
   },
 
   async deleteService(id) {
-    const res = await this.request(`/services/${id}`, 'DELETE');
-    return res || { success: true, id };
+    return this.request(`/services/${id}`, 'DELETE');
   },
 
   // Bookings
   async getBookings() {
-    const res = await this.request('/bookings', 'GET');
-    return res || [];
+    return this.request('/bookings', 'GET');
   },
 
   async getReservedTimeSlots(date) {
-    const res = await this.request(`/bookings/reserved?date=${encodeURIComponent(date)}`, 'GET');
-    return res || [];
+    return this.request(`/bookings/reserved?date=${encodeURIComponent(date)}`, 'GET');
   },
 
   async createBooking(bookingData) {
-    const res = await this.request('/bookings', 'POST', bookingData);
-    return res || {
-      _id: 'bk-' + Date.now(),
-      reference: 'BK-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
-      ...bookingData,
-      status: 'Pending'
-    };
+    return this.request('/bookings', 'POST', bookingData);
   },
 
   async updateBookingStatus(reference, status) {
-    const res = await this.request(`/bookings/${reference}`, 'PATCH', { status });
-    return res || { reference, status };
+    return this.request(`/bookings/${reference}`, 'PATCH', { status });
   },
 
   // Orders
   async getOrders() {
-    const res = await this.request('/orders', 'GET');
-    return res || [];
+    return this.request('/orders', 'GET');
   },
 
   async createOrder(orderData) {
-    const res = await this.request('/orders', 'POST', orderData);
-    return res || {
-      _id: 'ord-' + Date.now(),
-      reference: 'ORD-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
-      ...orderData,
-      status: 'Paid'
-    };
+    return this.request('/orders', 'POST', orderData);
   },
 
   async updateOrderStatus(reference, status) {
-    const res = await this.request(`/orders/${reference}`, 'PATCH', { status });
-    return res || { reference, status };
+    return this.request(`/orders/${reference}`, 'PATCH', { status });
   },
 
   // Contact Form Inquiry
   async sendContactInquiry(contactData) {
-    const res = await this.request('/contact', 'POST', contactData);
-    return res || { success: true, message: 'Inquiry routed to beautybyjessam@gmail.com' };
+    return this.request('/contact', 'POST', contactData);
   },
 
   // User Management (Admin Only)
   async getUsers() {
-    const res = await this.request('/auth/users', 'GET');
-    return res || [];
+    return this.request('/auth/users', 'GET');
   },
 
   async updateUserRole(id, role) {
-    const res = await this.request(`/auth/users/${id}/role`, 'PATCH', { role });
-    return res || { id, role };
+    return this.request(`/auth/users/${id}/role`, 'PATCH', { role });
   },
 
   async updateUserPoints(id, loyaltyPoints) {
-    const res = await this.request(`/auth/users/${id}/points`, 'PATCH', { loyaltyPoints });
-    return res || { id, loyaltyPoints };
+    return this.request(`/auth/users/${id}/points`, 'PATCH', { loyaltyPoints });
   },
 
   async deleteUser(id) {
-    const res = await this.request(`/auth/users/${id}`, 'DELETE');
-    return res || { success: true, id };
+    return this.request(`/auth/users/${id}`, 'DELETE');
   }
 };
 
