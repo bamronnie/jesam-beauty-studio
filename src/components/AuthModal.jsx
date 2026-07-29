@@ -76,28 +76,6 @@ export default function AuthModal({
     }
   };
 
-  React.useEffect(() => {
-    if (!isOpen) return;
-    const timer = setTimeout(() => {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-      if (clientId && window.google) {
-        try {
-          window.google.accounts.id.initialize({
-            client_id: clientId,
-            callback: handleGoogleCredentialResponse
-          });
-          window.google.accounts.id.renderButton(
-            document.getElementById("google-signin-btn-container"),
-            { theme: "outline", size: "large", width: "100%", text: "continue_with" }
-          );
-        } catch (e) {
-          console.warn("Failed to render standard Google button:", e);
-        }
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [isOpen, handleGoogleCredentialResponse]);
-
   if (!isOpen) return null;
 
   const handleLogin = async (e) => {
