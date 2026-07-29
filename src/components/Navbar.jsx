@@ -71,18 +71,18 @@ export default function Navbar({
           style={{ 
             display: 'flex', 
             whiteSpace: 'nowrap',
-            animation: 'marquee 22s linear infinite',
+            animation: 'marquee 18s linear infinite',
             width: 'max-content'
           }}
         >
-          <span style={{ paddingRight: '4rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
-          <span style={{ paddingRight: '4rem', fontWeight: 600 }}>📸 Follow @jesambeauty on Instagram</span>
-          <span style={{ paddingRight: '4rem', fontWeight: 600 }}>✨ Premium Raw Hair & Styling</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>📸 Follow @jesambeauty on Instagram</span>
           
           {/* Duplicate contents for seamless looping */}
-          <span style={{ paddingRight: '4rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
-          <span style={{ paddingRight: '4rem', fontWeight: 600 }}>📸 Follow @jesambeauty on Instagram</span>
-          <span style={{ paddingRight: '4rem', fontWeight: 600 }}>✨ Premium Raw Hair & Styling</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>📸 Follow @jesambeauty on Instagram</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>❤️ Welcome to Jesam Beauty ❤️</span>
+          <span style={{ paddingRight: '5rem', fontWeight: 600 }}>📸 Follow @jesambeauty on Instagram</span>
         </div>
       </div>
 
