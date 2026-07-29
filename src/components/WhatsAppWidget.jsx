@@ -3,7 +3,7 @@ import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
 
 export default function WhatsAppWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const phoneNumber = '2348093337529'; // Jesam Beauty Studio WhatsApp number
+  const phoneNumber = '2348166205531'; // Jesam Beauty Studio WhatsApp number
 
   const quickMessages = [
     { label: '👑 Inquire about a Wig / Bundle', text: 'Hello Jesam Beauty! I would like to inquire about your Raw Human Hair wigs and bundles.' },

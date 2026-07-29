@@ -200,7 +200,7 @@ export default function Footer({ setActiveView, setAdminMode }) {
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 <Phone size={16} style={{ color: 'var(--gold-primary)', flexShrink: 0 }} />
-                <span>+234 809 333 7529</span>
+                <span>+234 816 620 5531</span>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 <Mail size={16} style={{ color: 'var(--gold-primary)', flexShrink: 0 }} />

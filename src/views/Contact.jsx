@@ -161,7 +161,7 @@ export default function Contact() {
               <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
                 <Phone size={24} style={{ color: 'var(--gold-primary)', margin: '0 auto 0.75rem auto' }} />
                 <h4 style={{ fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--cream-primary)', marginBottom: '0.4rem' }}>Phone</h4>
-                <p style={{ fontSize: '0.85rem' }}>+234 809 333 7529</p>
+                <p style={{ fontSize: '0.85rem' }}>+234 816 620 5531</p>
               </div>
               <div className="glass-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
                 <Mail size={24} style={{ color: 'var(--gold-primary)', margin: '0 auto 0.75rem auto' }} />

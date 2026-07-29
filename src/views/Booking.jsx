@@ -470,7 +470,7 @@ export default function Booking({
                       className="form-control"
                       value={userPhone}
                       onChange={(e) => setUserPhone(e.target.value)}
-                      placeholder="e.g. 0809 333 7529"
+                      placeholder="e.g. 0816 620 5531"
                       required
                       id="booking-phone"
                     />
